@@ -10,15 +10,19 @@ fn main() -> Result<(), std::io::Error> {
 }
 
 #[test]
-fn arithmetic() {
-    assert!(grammar::ExprParser::new().parse("22").is_ok());
+fn expression_parser() {
     assert!(grammar::ExprParser::new().parse("22").is_ok());
     assert!(grammar::ExprParser::new().parse("22 + 22").is_ok());
     assert!(grammar::ExprParser::new().parse("22 * 22").is_ok());
+    assert!(grammar::ExprParser::new().parse("a + a * a").is_ok());
+    assert!(grammar::ExprParser::new().parse("a * a + a").is_ok());
+    assert!(grammar::ExprParser::new().parse("aAaAa").is_ok());
 
     assert!(grammar::ExprParser::new().parse("22 * + 22").is_err());
     assert!(grammar::ExprParser::new().parse("22.1").is_err());
     assert!(grammar::ExprParser::new().parse("(22)").is_err());
+    assert!(grammar::ExprParser::new().parse("a A").is_err());
+    assert!(grammar::ExprParser::new().parse("a1 + a").is_err());
 }
 
 #[test]
