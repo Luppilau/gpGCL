@@ -1,0 +1,64 @@
+use std::str::FromStr;
+use crate::ast::{Expr, LogicalExpr, Command, Probability}; // (0)
+
+grammar;
+
+// ----- ARITHMETIC EXPRESSIONS ----- 
+
+pub Expr: Box<Expr>  = {
+  <l:Expr> "+" <r:Expr2> => Box::new(Expr::Add(<>)),
+  Expr2,
+};
+
+Expr2: Box<Expr> = {
+  <l:NumLiteral> "*" <r:Expr2> => Box::new(Expr::Times(<>)),
+  NumLiteral,
+};
+
+NumLiteral: Box<Expr> = {
+  r"[0-9]+" => Box::new(Expr::Literal(i32::from_str(<>).unwrap())),
+};
+
+// Variable: String = <s:r"[a-zA-Z]+"> => str::from_str(s).unwrap()
+
+// ----- LOGICAL EXPRESSIONS ----- 
+
+pub LogicalExpr: Box<LogicalExpr> = {
+  "!" <LogicalExpr> => Box::new(LogicalExpr::Not(<>)),
+  LogicalExpr2
+};
+
+LogicalExpr2: Box<LogicalExpr> = {
+  <l:LogicalExpr2> "&" <r:LogicalExpr3> => Box::new(LogicalExpr::And(<>)),
+  LogicalExpr3,
+};
+
+LogicalExpr3: Box<LogicalExpr> = {
+  <l:Expr> "<" <r:Expr> => Box::new(LogicalExpr::LessThan(<>)),
+};
+
+// ----- COMMANDS -----
+
+
+// skip | x := e | C; C | {C} [p] {C} | if (φ) {C} else {C}
+
+pub Command: Box<Command> = {
+  "skip" => Box<Command::Skip>,
+  // var
+  <l:Command> ";" <r:Command2> => Box::new(Command::Sequence(<>)),
+  Command2,
+}
+
+Command2: Box<Command> = {
+  "{" <l:Command2> "}" "[" <p:Probability> "]" "{" <r:Command2> "}" => Box::new(Command::ProbabilisticChoice(<>)),
+  Command3,
+}
+
+Command3: Box<Command> = {
+  "if" "(" <c:LogicalExpr> ")" "{" <l:Command2> "}" "else" "{" <r:Command2> "}"
+  Command3,
+}
+
+Probability: f32 = {
+  r"[+-]?[0-9]*\.[0-9]+" => Box::new(Expr::Literal(f32::from_str(<>).unwrap())),
+}
