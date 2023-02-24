@@ -1,11 +1,13 @@
 use std::str::FromStr;
-use crate::ast::{Expr, ExprOpcode, LogicalExpr, LogicalOpcode, LogicalExprOpcode};
+use crate::ast::{Expr, ExprOpcode};
+use crate::ast::{LogicalExpr, LogicalOpcode, LogicalExprOpcode};
+use crate::ast::{Command, Probability};
 
 grammar;
 
 // ----- ARITHMETIC EXPRESSIONS ----- 
 
-pub Expr : Box<Expr> = {
+pub Expr: Box<Expr> = {
   Expr ExprOp Expr2 => Box::new(Expr::ExprOp(<>)),
   Expr2,
 };
@@ -17,15 +19,15 @@ Expr2: Box<Expr> = {
 
 Var: Box<Expr> = {
   NumLiteral => Box::new(Expr::Number(<>)),
-  Variable => Box::new(Expr::Variable(<>)),
+  Identifier => Box::new(Expr::Variable(<>)),
 };
 
 NumLiteral: i32 = {
   r"[0-9]+" => i32::from_str(<>).unwrap(), 
 };
 
-Variable: String = {
-  <s:r"[a-zA-Z]+"> => s.to_string(),
+Identifier: String = {
+  r"[a-zA-Z]+" => <>.to_string(),
 };
 
 
@@ -38,7 +40,7 @@ Expr2Op: ExprOpcode = {
 };
 
 
-// // ----- LOGICAL EXPRESSIONS ----- 
+// ----- LOGICAL EXPRESSIONS ----- 
 
 pub LogicalExpr: Box<LogicalExpr> = {
   "!" <a:LogicalExpr> => Box::new(LogicalExpr::Not(a)),
@@ -51,13 +53,9 @@ LogicalExpr2: Box<LogicalExpr> = {
 };
 
 LogicalExpr3: Box<LogicalExpr> = {
-  LogicalExpr3 LogicalExprOp LogicalExpr4 => Box::new(LogicalExpr::LogicalExprOp(<>)),
-  Expr,
+  Expr LogicalExprOp Expr  => Box::new(LogicalExpr::LogicalExprOp(<>))
 };
 
-LogicalExpr4: Box<Expr> = {
-  Expr
-};
 
 LogicalOp: LogicalOpcode = {
   "&" => LogicalOpcode::And,
@@ -67,28 +65,24 @@ LogicalExprOp: LogicalExprOpcode = {
   "<" => LogicalExprOpcode::LessThan,
 };
 
-// // ----- COMMANDS -----
+// ----- COMMANDS -----
+// skip | x := e | C; C | {C} [p] {C} | if (φ) {C} else {C}
 
+pub Command: Box<Command> = {
+  <l:Command> ";" <r:Command2> => Box::new(Command::Sequence(<>)),
+  Command2,
+}
 
-// // skip | x := e | C; C | {C} [p] {C} | if (φ) {C} else {C}
-
-// pub Command: Box<Command> = {
-//   "skip" => Box<Command::Skip>,
-//   // var
-//   <l:Command> ";" <r:Command2> => Box::new(Command::Sequence(<>)),
-//   Command2,
-// }
-
-// Command2: Box<Command> = {
-//   "{" <l:Command2> "}" "[" <p:Probability> "]" "{" <r:Command2> "}" => Box::new(Command::ProbabilisticChoice(<>)),
-//   Command3,
-// }
+Command2: Box<Command> = {
+  "{" <l:Command2> "}" "[" <p:Probability> "]" "{" <r:Command2> "}" => Box::new(Command::ProbabilisticChoice(<>)),
+  // Command3,
+}
 
 // Command3: Box<Command> = {
 //   "if" "(" <c:LogicalExpr> ")" "{" <l:Command2> "}" "else" "{" <r:Command2> "}"
 //   Command3,
 // }
 
-// Probability: f32 = {
-//   r"[+-]?[0-9]*\.[0-9]+" => Box::new(Expr::Literal(f32::from_str(<>).unwrap())),
-// }
+Probability: f32 = {
+  r"[+-]?[0-9]*\.[0-9]+" => Expr::Literal(f32::from_str(<>).unwrap()),
+}

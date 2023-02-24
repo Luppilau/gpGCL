@@ -35,4 +35,7 @@ fn logical() {
         .is_ok());
 
     assert!(grammar::LogicalExprParser::new().parse("22 < !22").is_err());
+    assert!(grammar::LogicalExprParser::new()
+        .parse("22 < 22 < 22")
+        .is_err());
 }
