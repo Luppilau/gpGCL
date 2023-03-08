@@ -1,44 +1,43 @@
 use std::str::FromStr;
 use crate::ast::{Expr, ExprOpcode};
 use crate::ast::{LogicalExpr, LogicalOpcode, LogicalExprOpcode};
-use crate::ast::{Command, Probability};
+use crate::ast::{Command, Probability, ProbabilityDistribution};
 
 grammar;
 
 // ----- ARITHMETIC EXPRESSIONS ----- 
 
-pub Expr: Box<Expr> = {
-  Expr ExprOp Expr2 => Box::new(Expr::ExprOp(<>)),
-  Expr2,
+pub expr: Box<Expr> = {
+  expr expr_op expr_2 => Box::new(Expr::ExprOp(<>)),
+  expr_2,
 };
 
-Expr2: Box<Expr> = {
-  Expr2 Expr2Op Var => Box::new(Expr::ExprOp(<>)),
-  Var,
+expr_2: Box<Expr> = {
+  expr_2 expr_2_op var => Box::new(Expr::ExprOp(<>)),
+  var,
 };
 
-Var: Box<Expr> = {
-  NumLiteral => Box::new(Expr::Number(<>)),
-  Identifier => Box::new(Expr::Variable(<>)),
-  "(" <Expr> ")",
+var: Box<Expr> = {
+  num_literal => Box::new(Expr::Number(<>)),
+  identifier => Box::new(Expr::Variable(<>)),
+  "(" <expr> ")",
 };
 
-NumLiteral: i32 = {
+num_literal: i32 = {
   r"[0-9]+" => i32::from_str(<>).unwrap(), 
 };
 
-Identifier: String = {
+identifier: String = {
   r"[a-zA-Z]+" => <>.to_string(),
 };
 
-
-ExprOp: ExprOpcode = { 
+expr_op: ExprOpcode = { 
   "+" => ExprOpcode::Add,
   "-" => ExprOpcode::Sub,
-  "--" => ExprOpcode::Monus,
+  ":-" => ExprOpcode::Monus,
 };
 
-Expr2Op: ExprOpcode = {
+expr_2_op: ExprOpcode = {
   "*" => ExprOpcode::Mul,
   "/" => ExprOpcode::Div,
   "%" => ExprOpcode::Mod,
@@ -47,28 +46,28 @@ Expr2Op: ExprOpcode = {
 
 // ----- LOGICAL EXPRESSIONS ----- 
 
-pub LogicalExpr: Box<LogicalExpr> = {
-  "!" <a:LogicalExpr> => Box::new(LogicalExpr::Not(a)),
-  LogicalExpr2
+pub logical_expr: Box<LogicalExpr> = {
+  "!" <logical_expr> => Box::new(LogicalExpr::Not(<>)),
+  logical_expr_2
 };
 
-LogicalExpr2: Box<LogicalExpr> = {
-  LogicalExpr2 LogicalOp LogicalExpr3 => Box::new(LogicalExpr::LogicalOp(<>)),
-  LogicalExpr3,
+logical_expr_2: Box<LogicalExpr> = {
+  logical_expr_2 logical_op logical_expr_3 => Box::new(LogicalExpr::LogicalOp(<>)),
+  logical_expr_3,
 };
 
-LogicalExpr3: Box<LogicalExpr> = {
-  Expr LogicalExprOp Expr  => Box::new(LogicalExpr::LogicalExprOp(<>)),
-  "(" <LogicalExpr> ")",
+logical_expr_3: Box<LogicalExpr> = {
+  expr logical_expr_op expr  => Box::new(LogicalExpr::LogicalExprOp(<>)),
+  "(" <logical_expr> ")",
 };
 
 
-LogicalOp: LogicalOpcode = {
+logical_op: LogicalOpcode = {
   "&&" => LogicalOpcode::And,
   "||" => LogicalOpcode::Or,
 };
 
-LogicalExprOp: LogicalExprOpcode = {
+logical_expr_op: LogicalExprOpcode = {
   "==" => LogicalExprOpcode::Equal,
   "!=" => LogicalExprOpcode::Equal,
   "<" => LogicalExprOpcode::LessThan,
@@ -79,21 +78,34 @@ LogicalExprOp: LogicalExprOpcode = {
 
 // ----- COMMANDS -----
 
-pub Command: Box<Command> = {
-  <l:Command> ";" <r:Command2> => Box::new(Command::Sequence(<>)),
-  Command2,
+pub command: Box<Command> = {
+  <command> ";" <command_2> => Box::new(Command::Sequence(<>)),
+  command_2,
 }
 
-Command2: Box<Command> = {
-  "{" <l:Command2> "}" "[" <p:Probability> "]" "{" <r:Command2> "}" => Box::new(Command::ProbabilisticChoice(<>)),
-  // Command3,
+command_2: Box<Command> = {
+  "{" <command> "}" "["  "]" "{" <command> "}" => Box::new(Command::NondeterministicChoice(<>)),
+  "{" <command> "}" "[" <probability> "]" "{" <command> "}" => Box::new(Command::ProbabilisticChoice(<>)),
+  "if" "(" <logical_expr> ")" "{" <command> "}" "else" "{" <command> "}" => Box::new(Command::IfElse(<>)),
+  "while" "(" <logical_expr> ")" "{" <command> "}" => Box::new(Command::While(<>)),
+  <identifier> ":=" <expr> => Box::new(Command::Assignment(<>)),
+  <identifier> ":=" <probability_distribution> => Box::new(Command::RandomAssignment(<>)),
+  command_keyword => Box::new(<>),
 }
 
-// Command3: Box<Command> = {
-//   "if" "(" <c:LogicalExpr> ")" "{" <l:Command2> "}" "else" "{" <r:Command2> "}"
-//   Command3,
-// }
-
-Probability: Probability = {
+probability: Probability = {
   r"[+-]?[0-9]*\.[0-9]+" => Probability::Probability(f32::from_str(<>).unwrap()),
+}
+
+command_keyword: Command = {
+  "skip" => Command::Skip,
+  "diverge" => Command::Diverge,
+  "tick(" <num_literal> ")"  => Command::Tick(<>),
+}
+
+probability_distribution: ProbabilityDistribution = {
+  "normal()" => ProbabilityDistribution::Normal(1,1),
+  "uniform()" => ProbabilityDistribution::Uniform(1),
+  "lognormal()" => ProbabilityDistribution::LogNormal(1),
+  "exponential()" => ProbabilityDistribution::Exponential(1),
 }
