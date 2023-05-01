@@ -93,15 +93,24 @@ fn command() {
     assert!(parser.parse("diverge").is_ok());
     assert!(parser.parse("tick(1)").is_ok());
     assert!(parser.parse("x:=1").is_ok());
-    assert!(parser.parse("x := normal()").is_ok());
-    assert!(parser.parse("x := uniform()").is_ok());
-    assert!(parser.parse("x := lognormal()").is_ok());
-    assert!(parser.parse("x := exponential()").is_ok());
+    assert!(parser.parse("x := normal(1,2)").is_ok());
+    assert!(parser.parse("x := uniform(1)").is_ok());
+    assert!(parser.parse("x := lognormal(1)").is_ok());
+    assert!(parser.parse("x := exponential(1)").is_ok());
     assert!(parser.parse("skip ; skip").is_ok());
     assert!(parser.parse("{skip} [] {skip}").is_ok());
     assert!(parser.parse("{skip} [0.1] {skip}").is_ok());
+    assert!(parser.parse("if (a==0) { skip }").is_ok());
     assert!(parser.parse("if (a==0) { skip } else { skip }").is_ok());
     assert!(parser.parse("while (a > b) { skip }").is_ok());
+    assert!(parser
+        .parse(
+            "
+            if (a==0) { skip };
+            if (a==0) { skip } else { skip }
+            "
+        )
+        .is_ok());
     assert!(parser
         .parse(
             "if (x>=y) {
@@ -114,4 +123,20 @@ fn command() {
         .is_ok());
 
     assert!(parser.parse("tick(0.1)").is_err());
+
+    let expr = parser
+        .parse(
+            "
+        if (0 == 0) {
+            {skip; skip} [] {skip; skip}
+        };
+        {skip; skip} [0.2] {tick(1)};
+        x:=exponential(1);
+        while(a>b) {
+            skip
+        }
+        ",
+        )
+        .unwrap();
+    assert_eq!(&format!("{:?}", expr),"if (0 == 0) { {skip; skip} [] {skip; skip} }; {skip; skip} [0.2] {tick(1)}; \"x\" := exponential(1); while (\"a\" > \"b\") { skip }");
 }

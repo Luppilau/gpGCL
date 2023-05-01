@@ -1,11 +1,13 @@
 use std::fmt::{Debug, Error, Formatter};
 
+#[derive(Clone, PartialEq)]
 pub enum Expr {
     Number(i32),
     Variable(String),
     ExprOp(Box<Expr>, ExprOpcode, Box<Expr>),
 }
 
+#[derive(Clone, PartialEq)]
 pub enum ExprOpcode {
     Add,
     Sub,
@@ -15,17 +17,20 @@ pub enum ExprOpcode {
     Mod,
 }
 
+#[derive(Clone, PartialEq)]
 pub enum LogicalExpr {
     Not(Box<LogicalExpr>),
     LogicalOp(Box<LogicalExpr>, LogicalOpcode, Box<LogicalExpr>),
     LogicalExprOp(Box<Expr>, LogicalExprOpcode, Box<Expr>),
 }
 
+#[derive(Clone, PartialEq)]
 pub enum LogicalOpcode {
     And,
     Or,
 }
 
+#[derive(Clone, PartialEq)]
 pub enum LogicalExprOpcode {
     Equal,
     NotEqual,
@@ -35,6 +40,7 @@ pub enum LogicalExprOpcode {
     GreaterThanOrEq,
 }
 
+#[derive(Clone, PartialEq)]
 pub enum Command {
     Skip,
     Diverge,
@@ -44,14 +50,17 @@ pub enum Command {
     Sequence(Box<Command>, Box<Command>),
     NondeterministicChoice(Box<Command>, Box<Command>),
     ProbabilisticChoice(Box<Command>, Probability, Box<Command>),
+    If(Box<LogicalExpr>, Box<Command>),
     IfElse(Box<LogicalExpr>, Box<Command>, Box<Command>),
     While(Box<LogicalExpr>, Box<Command>),
 }
 
+#[derive(Clone, PartialEq)]
 pub enum Probability {
     Probability(f32),
 }
 
+#[derive(Clone, PartialEq)]
 pub enum ProbabilityDistribution {
     Normal(i32, i32),
     Uniform(i32),
@@ -114,6 +123,45 @@ impl Debug for LogicalExprOpcode {
             LessThanOrEq => write!(fmt, "<="),
             GreaterThan => write!(fmt, ">"),
             GreaterThanOrEq => write!(fmt, ">="),
+        }
+    }
+}
+
+impl Debug for Command {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
+        use self::Command::*;
+        match &*self {
+            Skip => write!(fmt, "skip"),
+            Diverge => write!(fmt, "diverge"),
+            Tick(n) => write!(fmt, "tick({:?})", n),
+            Assignment(var, val) => write!(fmt, "{:?} := {:?}", var, val),
+            RandomAssignment(var, dist) => write!(fmt, "{:?} := {:?}", var, dist),
+            Sequence(l, r) => write!(fmt, "{:?}; {:?}", l, r),
+            NondeterministicChoice(l, r) => write!(fmt, "{{{:?}}} [] {{{:?}}}", l, r),
+            ProbabilisticChoice(l, p, r) => write!(fmt, "{{{:?}}} [{:?}] {{{:?}}}", l, p, r),
+            If(g, c) => write!(fmt, "if {:?} {{ {:?} }}", g, c),
+            IfElse(g, c, e) => write!(fmt, "if {:?} {{ {:?} }} else {{ {:?} }}", g, c, e),
+            While(g, c) => write!(fmt, "while {:?} {{ {:?} }}", g, c),
+        }
+    }
+}
+
+impl Debug for ProbabilityDistribution {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
+        use self::ProbabilityDistribution::*;
+        match *self {
+            Normal(l, r) => write!(fmt, "normal({:?}, {:?})", l, r),
+            Uniform(l) => write!(fmt, "uniform({:?})", l),
+            LogNormal(l) => write!(fmt, "lognormal({:?})", l),
+            Exponential(l) => write!(fmt, "exponential({:?})", l),
+        }
+    }
+}
+
+impl Debug for Probability {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
+        match *self {
+            Probability::Probability(n) => write!(fmt, "{:?}", n),
         }
     }
 }
