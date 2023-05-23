@@ -87,6 +87,7 @@ command_2: Box<Command> = {
   "{" <command> "}" "["  "]" "{" <command> "}" => Box::new(Command::NondeterministicChoice(<>)),
   "{" <command> "}" "[" <probability> "]" "{" <command> "}" => Box::new(Command::ProbabilisticChoice(<>)),
   "if" "(" <logical_expr> ")" "{" <command> "}" "else" "{" <command> "}" => Box::new(Command::IfElse(<>)),
+  "if" "(" <logical_expr> ")" "{" <command> "}"  => Box::new(Command::If(<>)),
   "while" "(" <logical_expr> ")" "{" <command> "}" => Box::new(Command::While(<>)),
   <identifier> ":=" <expr> => Box::new(Command::Assignment(<>)),
   <identifier> ":=" <probability_distribution> => Box::new(Command::RandomAssignment(<>)),
@@ -104,8 +105,8 @@ command_keyword: Command = {
 }
 
 probability_distribution: ProbabilityDistribution = {
-  "normal()" => ProbabilityDistribution::Normal(1,1),
-  "uniform()" => ProbabilityDistribution::Uniform(1),
-  "lognormal()" => ProbabilityDistribution::LogNormal(1),
-  "exponential()" => ProbabilityDistribution::Exponential(1),
+  "normal(" <num_literal> "," <num_literal> ")" => ProbabilityDistribution::Normal(<>),
+  "uniform(" <num_literal> ")" => ProbabilityDistribution::Uniform(<>),
+  "lognormal(" <num_literal>"," <num_literal> ")" => ProbabilityDistribution::LogNormal(<>),
+  "exponential(" <num_literal> ")" => ProbabilityDistribution::Exponential(<>),
 }
