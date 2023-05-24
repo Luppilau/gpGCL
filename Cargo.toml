@@ -1,12 +1,6 @@
-[package]
-name = "bachelor"
-version = "0.1.0"
-edition = "2021"
-build = "build.rs"
+[workspace]
 
-[build-dependencies] 
-lalrpop = "0.19.7"
-
-[dependencies]
-lalrpop-util = {version = "0.19.7", features = ["lexer"]}
-regex = "1"
+members = [
+  "grammar",
+  "server"
+]
