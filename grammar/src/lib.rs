@@ -5,7 +5,7 @@ lalrpop_mod!(pub grammar);
 
 mod ast;
 
-pub fn parse(input: &str) -> Result<ast::Command, String> {
+pub fn parse_grammar(input: &str) -> Result<ast::Command, String> {
     let parser = grammar::commandParser::new();
     match parser.parse(input) {
         Ok(command) => Ok(*command),
