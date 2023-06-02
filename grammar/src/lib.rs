@@ -42,17 +42,30 @@ mod tests {
         let parser = grammar::logical_exprParser::new();
 
         let expr = parser.parse("!1>2 && 1>2").unwrap();
-        assert_eq!(&format!("{:?}", expr), "!((1 > 2) && (1 > 2))");
+        assert_eq!(
+            &format!("{:?}", expr), 
+            "Not(LogicalOp(LogicalExprOp(Number(1), GreaterThan, Number(2)), And, LogicalExprOp(Number(1), GreaterThan, Number(2))))"
+        );
 
         let expr = parser.parse("(!1>2) && 1>2").unwrap();
-        assert_eq!(&format!("{:?}", expr), "(!(1 > 2) && (1 > 2))");
+        assert_eq!(
+            &format!("{:?}", expr), 
+            "LogicalOp(Not(LogicalExprOp(Number(1), GreaterThan, Number(2))), And, LogicalExprOp(Number(1), GreaterThan, Number(2)))"
+        );
 
         let expr = parser.parse("!(1>2) && (1>2)").unwrap();
-        assert_eq!(&format!("{:?}", expr), "!((1 > 2) && (1 > 2))");
+        assert_eq!(
+            &format!("{:?}", expr), 
+            "Not(LogicalOp(LogicalExprOp(Number(1), GreaterThan, Number(2)), And, LogicalExprOp(Number(1), GreaterThan, Number(2))))"
+        );
 
         let expr = parser.parse("1>2 && 1>2 || 1>2").unwrap();
-        assert_eq!(&format!("{:?}", expr), "(((1 > 2) && (1 > 2)) || (1 > 2))");
+        assert_eq!(
+            &format!("{:?}", expr), 
+            "LogicalOp(LogicalOp(LogicalExprOp(Number(1), GreaterThan, Number(2)), And, LogicalExprOp(Number(1), GreaterThan, Number(2))), Or, LogicalExprOp(Number(1), GreaterThan, Number(2)))"
+        );
     }
+
     #[test]
     fn expression() {
         let parser = grammar::exprParser::new();
@@ -80,16 +93,28 @@ mod tests {
         let parser = grammar::exprParser::new();
 
         let expr = parser.parse("1 * 2 + 3").unwrap();
-        assert_eq!(&format!("{:?}", expr), "((1 * 2) + 3)");
+        assert_eq!(
+            &format!("{:?}", expr),
+            "ExprOp(ExprOp(Number(1), Mul, Number(2)), Add, Number(3))"
+        );
 
         let expr = parser.parse("1 / 2 - 3").unwrap();
-        assert_eq!(&format!("{:?}", expr), "((1 / 2) - 3)");
+        assert_eq!(
+            &format!("{:?}", expr),
+            "ExprOp(ExprOp(Number(1), Div, Number(2)), Sub, Number(3))"
+        );
 
         let expr = parser.parse("1 % 2 :- 3").unwrap();
-        assert_eq!(&format!("{:?}", expr), "((1 % 2) :- 3)");
+        assert_eq!(
+            &format!("{:?}", expr),
+            "ExprOp(ExprOp(Number(1), Mod, Number(2)), Monus, Number(3))"
+        );
 
         let expr = parser.parse("1 * (2 + 3)").unwrap();
-        assert_eq!(&format!("{:?}", expr), "(1 * (2 + 3))");
+        assert_eq!(
+            &format!("{:?}", expr),
+            "ExprOp(Number(1), Mul, ExprOp(Number(2), Add, Number(3)))"
+        );
     }
     #[test]
     fn command() {
@@ -144,20 +169,26 @@ mod tests {
         ",
             )
             .unwrap();
-        assert_eq!(&format!("{:?}", expr),"if (0 == 0) { {skip; skip} [] {skip; skip} }; {skip; skip} [0.2] {tick(1)}; \"x\" := exponential(1); while (\"a\" > \"b\") { skip }");
+        assert_eq!(
+            &format!("{:?}", expr),
+            "Sequence(Sequence(Sequence(If(LogicalExprOp(Number(0), Equal, Number(0)), NondeterministicChoice(Sequence(Skip, Skip), Sequence(Skip, Skip))), ProbabilisticChoice(Sequence(Skip, Skip), Probability(0.2), Tick(1))), RandomAssignment(\"x\", Exponential(1))), While(LogicalExprOp(Variable(\"a\"), GreaterThan, Variable(\"b\")), Skip))"
+        );
     }
 
     #[test]
-    #[ignore = "not implemented"]
     fn command_associativity() {
-        todo!("test command associativity")
+        let parser = grammar::commandParser::new();
 
-        // let parser = grammar::commandParser::new();
+        let expr = parser.parse("skip; skip; skip").unwrap();
+        assert_eq!(
+            &format!("{:?}", expr),
+            "Sequence(Sequence(Skip, Skip), Skip)"
+        );
 
-        // let expr = parser.parse("skip; skip; skip").unwrap();
-        // assert_eq!(&format!("{:?}", expr), "((skip; skip); skip)");
-
-        // let expr = parser.parse("skip; skip; skip; skip").unwrap();
-        // assert_eq!(&format!("{:?}", expr), "(((skip; skip); skip); skip)");
+        let expr = parser.parse("skip; skip; skip; skip").unwrap();
+        assert_eq!(
+            &format!("{:?}", expr),
+            "Sequence(Sequence(Sequence(Skip, Skip), Skip), Skip)"
+        );
     }
 }
