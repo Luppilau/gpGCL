@@ -4,7 +4,6 @@ extern crate lalrpop_util;
 lalrpop_mod!(pub grammar);
 
 mod ast;
-mod transformer;
 mod visitor;
 
 pub fn parse_grammar(input: &str) -> Result<ast::Command, String> {
