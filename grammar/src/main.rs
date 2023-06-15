@@ -8,7 +8,7 @@ mod ast;
 fn main() {
     let parser = grammar::commandParser::new();
 
-    let mut ast = parser
+    let _ast = parser
         .parse(
             "fail := 0;
             sent := 0;
