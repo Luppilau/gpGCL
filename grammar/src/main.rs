@@ -4,13 +4,13 @@ extern crate lalrpop_util;
 lalrpop_mod!(pub grammar);
 
 mod ast;
-
+// mod cst;
 mod visitor;
 
 fn main() {
     let parser = grammar::commandParser::new();
 
-    let mut ast = parser
+    let cst = parser
         .parse(
             "fail := 0;
             sent := 0;
@@ -19,4 +19,5 @@ fn main() {
             }",
         )
         .unwrap();
+
 }

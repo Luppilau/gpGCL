@@ -1,10 +1,27 @@
-use std::fmt::{Debug, Display, Error, Formatter};
+use std::fmt::Debug;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct LitNumber {
+    pub value: f32,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct LitVariable {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ExprOp {
+    pub left: Box<Expr>,
+    pub op: ExprOpcode,
+    pub right: Box<Expr>,
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
-    Number(f32),
-    Variable(String),
-    ExprOp(Box<Expr>, ExprOpcode, Box<Expr>),
+    Number(LitNumber),
+    Variable(LitVariable),
+    ExprOp(ExprOp),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -19,9 +36,28 @@ pub enum ExprOpcode {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum LogicalExpr {
-    Not(Box<LogicalExpr>),
-    LogicalOp(Box<LogicalExpr>, LogicalOpcode, Box<LogicalExpr>),
-    LogicalExprOp(Box<Expr>, LogicalExprOpcode, Box<Expr>),
+    Not(Not),
+    LogicalOp(LogicalOp),
+    LogicalExprOp(LogicalExprOp),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Not {
+    pub expr: Box<LogicalExpr>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct LogicalOp {
+    pub left: Box<LogicalExpr>,
+    pub op: LogicalOpcode,
+    pub right: Box<LogicalExpr>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct LogicalExprOp {
+    pub left: Box<Expr>,
+    pub op: LogicalExprOpcode,
+    pub right: Box<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -41,133 +77,118 @@ pub enum LogicalExprOpcode {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct Skip {}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Diverge {}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Tick {
+    pub value: LitNumber,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Assignment {
+    pub name: LitVariable,
+    pub expr: Box<Expr>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RandomAssignment {
+    pub name: LitVariable,
+    pub distribution: ProbabilityDistribution,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Sequence {
+    pub left: Box<Command>,
+    pub right: Box<Command>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct NondeterministicChoice {
+    pub left: Box<Command>,
+    pub right: Box<Command>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProbabilisticChoice {
+    pub left: Box<Command>,
+    pub probability: Probability,
+    pub right: Box<Command>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct If {
+    pub condition: Box<LogicalExpr>,
+    pub command: Box<Command>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct IfElse {
+    pub condition: Box<LogicalExpr>,
+    pub left: Box<Command>,
+    pub right: Box<Command>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct While {
+    pub condition: Box<LogicalExpr>,
+    pub command: Box<Command>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Command {
-    Skip,
-    Diverge,
-    Tick(f32),
-    Assignment(String, Box<Expr>),
-    RandomAssignment(String, ProbabilityDistribution),
-    Sequence(Box<Command>, Box<Command>),
-    NondeterministicChoice(Box<Command>, Box<Command>),
-    ProbabilisticChoice(Box<Command>, Probability, Box<Command>),
-    If(Box<LogicalExpr>, Box<Command>),
-    IfElse(Box<LogicalExpr>, Box<Command>, Box<Command>),
-    While(Box<LogicalExpr>, Box<Command>),
+    Skip(Skip),
+    Diverge(Diverge),
+    Tick(Tick),
+    Assignment(Assignment),
+    RandomAssignment(RandomAssignment),
+    Sequence(Sequence),
+    NondeterministicChoice(NondeterministicChoice),
+    ProbabilisticChoice(ProbabilisticChoice),
+    If(If),
+    IfElse(IfElse),
+    While(While),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Probability {
-    Probability(f32),
+    Probability(ProbabilityLiteral),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProbabilityLiteral {
+    pub value: LitNumber,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProbabilityDistribution {
-    Normal(f32, f32),
-    Uniform(f32, f32),
-    LogNormal(f32, f32),
-    Exponential(f32),
+    Normal(ProbabilityDistributionNormal),
+    Uniform(ProbabilityDistributionUniform),
+    LogNormal(ProbabilityDistributionLogNormal),
+    Exponential(ProbabilityDistributionExponential),
 }
 
-////////////////////////////////////
-
-////////////////////////////////////
-
-impl Display for Expr {
-    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
-        use self::Expr::*;
-        match &*self {
-            Number(n) => write!(fmt, "{}", n),
-            Variable(s) => write!(fmt, "{s}"),
-            ExprOp(ref l, op, ref r) => write!(fmt, "{l} {op} {r}"),
-        }
-    }
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProbabilityDistributionNormal {
+    pub mean: LitNumber,
+    pub std_dev: LitNumber,
 }
 
-impl Display for LogicalExpr {
-    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
-        use self::LogicalExpr::*;
-        match &*self {
-            Not(b) => write!(fmt, "!{b}"),
-            LogicalOp(ref l, op, ref r) => write!(fmt, "{l} {op} {r}"),
-            LogicalExprOp(ref l, op, ref r) => write!(fmt, "{l} {op} {r}"),
-        }
-    }
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProbabilityDistributionUniform {
+    pub min: LitNumber,
+    pub max: LitNumber,
 }
 
-impl Display for ExprOpcode {
-    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
-        use self::ExprOpcode::*;
-        match *self {
-            Add => write!(fmt, "+"),
-            Sub => write!(fmt, "-"),
-            Mul => write!(fmt, "*"),
-            Div => write!(fmt, "/"),
-            Monus => write!(fmt, ":-"),
-            Mod => write!(fmt, "%"),
-        }
-    }
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProbabilityDistributionLogNormal {
+    pub mean: LitNumber,
+    pub std_dev: LitNumber,
 }
 
-impl Display for LogicalOpcode {
-    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
-        use self::LogicalOpcode::*;
-        match *self {
-            And => write!(fmt, "&&"),
-            Or => write!(fmt, "||"),
-        }
-    }
-}
-
-impl Display for LogicalExprOpcode {
-    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
-        use self::LogicalExprOpcode::*;
-        match *self {
-            Equal => write!(fmt, "=="),
-            NotEqual => write!(fmt, "!="),
-            LessThan => write!(fmt, "<"),
-            LessThanOrEq => write!(fmt, "<="),
-            GreaterThan => write!(fmt, ">"),
-            GreaterThanOrEq => write!(fmt, ">="),
-        }
-    }
-}
-
-impl Display for Command {
-    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
-        use self::Command::*;
-        match &*self {
-            Skip => write!(fmt, "skip"),
-            Diverge => write!(fmt, "diverge"),
-            Tick(n) => write!(fmt, "tick({n})"),
-            Assignment(var, val) => write!(fmt, "{var} := {val}"),
-            RandomAssignment(var, dist) => write!(fmt, "{var} := {dist}"),
-            Sequence(l, r) => write!(fmt, "{l}; {r}"),
-            NondeterministicChoice(l, r) => write!(fmt, "{{{l}}} [] {{{r}}}"),
-            ProbabilisticChoice(l, p, r) => write!(fmt, "{{{l}}} [{p}] {{{r}}}"),
-            If(g, c) => write!(fmt, "if {g} {{ {c} }}"),
-            IfElse(g, c, e) => write!(fmt, "if {g} {{ {c} }} else {{ {e} }}"),
-            While(g, c) => write!(fmt, "while {g} {{ {c} }}"),
-        }
-    }
-}
-
-impl Display for ProbabilityDistribution {
-    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
-        use self::ProbabilityDistribution::*;
-        match *self {
-            Normal(l, r) => write!(fmt, "normal({l}, {r})"),
-            Uniform(l, r) => write!(fmt, "uniform({l}, {r})"),
-            LogNormal(l, r) => write!(fmt, "lognormal({l}, {r})"),
-            Exponential(l) => write!(fmt, "exponential({l})"),
-        }
-    }
-}
-
-impl Display for Probability {
-    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
-        use self::Probability::*;
-        match *self {
-            Probability(p) => write!(fmt, "{p}"),
-        }
-    }
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProbabilityDistributionExponential {
+    pub lambda: LitNumber,
 }
