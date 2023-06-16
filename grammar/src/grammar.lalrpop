@@ -1,8 +1,8 @@
 use std::str::FromStr;
 use crate::ast::{LitNumber, LitVariable, ExprOp, Expr, ExprOpcode};
 use crate::ast::{LogicalExpr, Not, LogicalOp, LogicalOpcode, LogicalExprOp, LogicalExprOpcode};
-use crate::ast::{Command, Sequence, NondeterministicChoice, ProbabilisticChoice, IfElse, If, While, Assignment, RandomAssignment, Skip, Diverge, Tick};
-use crate::ast::{Probability, ProbabilityLiteral, ProbabilityDistribution, ProbabilityDistributionNormal, ProbabilityDistributionUniform, ProbabilityDistributionLogNormal, ProbabilityDistributionExponential};
+use crate::ast::{Command, Sequence, NondetChoice, ProbChoice, IfElse, If, While, Assignment, RandomAssignment, Skip, Diverge, Tick};
+use crate::ast::{LitProb, ProbDist, ProbDistNormal, ProbDistUniform, ProbDistLogNormal, ProbDistExponential};
 
 
 grammar;
@@ -33,6 +33,7 @@ expr_op: ExprOpcode = {
   "+" => ExprOpcode::Add,
   "-" => ExprOpcode::Sub,
   ":-" => ExprOpcode::Monus,
+  expr_2_op,
 };
 
 expr_2_op: ExprOpcode = {
@@ -82,8 +83,8 @@ pub command: Box<Command> = {
 }
 
 command_2: Box<Command> = {
-  "{" <left:command> "}" "["  "]" "{" <right:command> "}" => Box::new(Command::NondeterministicChoice( NondeterministicChoice { <> })),
-  "{" <left:command> "}" "[" <probability:probability> "]" "{" <right:command> "}" => Box::new(Command::ProbabilisticChoice(ProbabilisticChoice {<>})),
+  "{" <left:command> "}" "["  "]" "{" <right:command> "}" => Box::new(Command::NondetChoice( NondetChoice { <> })),
+  "{" <left:command> "}" "[" <prob:probability> "]" "{" <right:command> "}" => Box::new(Command::ProbChoice(ProbChoice {<>})),
   "if" "(" <condition:logical_expr> ")" "{" <left:command> "}" "else" "{" <right:command> "}" => Box::new(Command::IfElse(IfElse {<>})),
   "if" "(" <condition:logical_expr> ")" "{" <command:command> "}"  => Box::new(Command::If(If {<>})),
   "while" "(" <condition:logical_expr> ")" "{" <command:command> "}" => Box::new(Command::While(While {<>})),
@@ -92,8 +93,8 @@ command_2: Box<Command> = {
   command_keyword => Box::new(<>),
 }
 
-probability: Probability = {
-  <value:num_literal> => Probability::Probability( ProbabilityLiteral {<>}),
+probability: LitProb = {
+  <value:num_literal> => LitProb {<>},
 }
 
 command_keyword: Command = {
@@ -102,9 +103,9 @@ command_keyword: Command = {
   "tick(" <value:num_literal> ")"  => Command::Tick(Tick{<>}),
 }
 
-probability_distribution: ProbabilityDistribution = {
-  "normal(" <mean:num_literal> "," <std_dev:num_literal> ")" => ProbabilityDistribution::Normal(ProbabilityDistributionNormal {<>}),
-  "uniform(" <min:num_literal> "," <max:num_literal> ")" => ProbabilityDistribution::Uniform(ProbabilityDistributionUniform {<>}),
-  "lognormal("  <mean:num_literal> "," <std_dev:num_literal> ")" => ProbabilityDistribution::LogNormal(ProbabilityDistributionLogNormal {<>}),
-  "exponential(" <lambda:num_literal> ")" => ProbabilityDistribution::Exponential(ProbabilityDistributionExponential {<>}),
+probability_distribution: ProbDist = {
+  "normal(" <mean:num_literal> "," <std_dev:num_literal> ")" => ProbDist::Normal(ProbDistNormal {<>}),
+  "uniform(" <min:num_literal> "," <max:num_literal> ")" => ProbDist::Uniform(ProbDistUniform {<>}),
+  "lognormal("  <mean:num_literal> "," <std_dev:num_literal> ")" => ProbDist::LogNormal(ProbDistLogNormal {<>}),
+  "exponential(" <lambda:num_literal> ")" => ProbDist::Exponential(ProbDistExponential {<>}),
 }
