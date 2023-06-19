@@ -44,9 +44,9 @@ fn main() {
     impl grammar::transform::Transform for Transformer {
         fn transform_logical_op(&mut self, i: LogicalOp) -> LogicalOp {
             LogicalOp {
-                left: i.right,
-                op: i.op,
-                right: i.left,
+                left: Box::new(transform_logical_expr(self, *i.right)),
+                op: transform_logical_opcode(self, i.op),
+                right: Box::new(transform_logical_expr(self, *i.left)),
             }
         }
     }
