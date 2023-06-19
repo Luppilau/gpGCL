@@ -3,10 +3,10 @@ extern crate lalrpop_util;
 
 lalrpop_mod!(pub grammar);
 
-mod ast;
-mod fold;
-mod transpile;
-mod visit;
+pub mod ast;
+pub mod transform;
+pub mod transpile;
+pub mod visit;
 
 pub fn parse_grammar(input: &str) -> Result<ast::Command, String> {
     let parser = grammar::commandParser::new();

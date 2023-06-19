@@ -2,5 +2,6 @@
 
 members = [
   "grammar",
-  "server"
+  "server",
+  "tester"
 ]
