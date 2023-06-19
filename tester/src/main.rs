@@ -7,7 +7,7 @@ const _BOUNDED_TRANSMISSION: &str = "fail := 0;
 sent := 0;
 while (sent < 8000000 && fail < 10) {
     { fail := 0; sent := sent + 1} [0.999] {fail := fail + 1}
-}";
+}; diverge";
 
 fn main() {
     let ast = grammar::parse_grammar(_BOUNDED_TRANSMISSION).unwrap();
@@ -15,19 +15,29 @@ fn main() {
     struct SupportChecker {
         errors: Vec<String>,
     }
+    impl SupportChecker {
+        fn new() -> Self {
+            Self { errors: vec![] }
+        }
+    }
+
     impl grammar::visit::Visit for SupportChecker {
         fn visit_diverge(&mut self, _i: &Diverge) {
             self.errors
                 .push("Diverge operation not supported".to_string());
         }
+
+        fn visit_skip(&mut self, i: &Skip) {
+            self.errors.push("Skip operation not supported".to_string());
+        }
     }
-    let mut checker = SupportChecker { errors: vec![] };
+
+    let mut checker = SupportChecker::new();
     checker.visit_command(&ast);
     if !checker.errors.is_empty() {
         for error in checker.errors {
             println!("{}", error);
         }
-        return;
     }
 
     struct Transformer;
