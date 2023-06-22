@@ -1,6 +1,42 @@
 use crate::ast::*;
 #[allow(dead_code)]
 
+/// # Transpile
+/// Use this trait to transpile an AST into a string.
+///
+/// To override the default implementation of a function, simply implement the function for your
+/// transpiler. For example, to override the default implementation of `transpile_assignment`, you
+/// would implement `transpile_assignment` for your transpiler.
+///
+/// NOTE - It is important to use the transpile functions on nested AST nodes. For example, if you
+/// are implementing `transpile_expr`, you should use `transpile_expr` on the `Expr` in the
+/// `ExprOp` that you are transpiling. This is to continue the recursive transpilation process.
+///
+///
+/// ## Example
+/// ```
+/// use grammar::ast::*;
+/// use grammar::transpile::{self, Transpile};
+///
+/// struct Transpiler;
+/// impl Transpile for Transpiler {
+///     fn transpile_assignment(&mut self, i: Assignment) -> String {
+///         format!(
+///             "{} :=== {}",
+///             transpile::transpile_lit_variable(self, i.name),
+///             transpile::transpile_expr(self, *i.expr)
+///         )
+///     }
+/// }
+/// ```
+///
+/// This transpiler will override the default transpilation for assignment, which is `x := 1` into a string of the form `x :=== 1`.
+///
+/// ### Usage of this transpiler:
+/// ```ignore
+/// let ast = Transpiler.transpile_command(ast);
+/// println!("{}", ast);
+/// ```
 pub trait Transpile {
     fn transpile_lit_number(&mut self, i: LitNumber) -> String {
         transpile_lit_number(self, i)
@@ -373,9 +409,6 @@ where
     format!("exponential({})", v.transpile_lit_number(i.lambda))
 }
 
-pub struct DefaultTranspiler;
-impl Transpile for DefaultTranspiler {}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -385,6 +418,9 @@ mod tests {
     fn test_transpile() {
         let parser = grammar::commandParser::new();
         let expr = parser.parse("if (8 > 2) {skip}").unwrap();
+
+        struct DefaultTranspiler;
+        impl Transpile for DefaultTranspiler {}
 
         let transpiled = DefaultTranspiler.transpile_command(*expr);
         assert_eq!("if (8 > 2) {skip}", format!("{}", transpiled));

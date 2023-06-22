@@ -1,6 +1,39 @@
 use crate::ast::*;
 #[allow(dead_code)]
 
+/// # Transform
+/// Use this trait to transform an AST.
+///
+/// To override the default implementation of a function, simply implement the function for your
+/// transformer. For example, to override the default implementation of `transform_assignment`, you
+/// would implement `transform_assignment` for your transformer.
+///
+/// NOTE - It is important to use the transform functions on nested AST nodes. For example, if you
+/// are implementing `transform_expr`, you should use `transform_expr` on the `Expr` in the
+/// `ExprOp` that you are transforming. This is to continue the recursive transforming process.
+///
+///
+/// ## Example
+/// ```
+/// use grammar::ast::*;
+/// use grammar::transform::{self, Transform};
+///
+/// struct Transformer;
+/// impl Transform for Transformer {
+///    fn transform_logical_op(&mut self, i: LogicalOp) -> LogicalOp {
+///        LogicalOp {
+///            left: Box::new(transform::transform_logical_expr(self, *i.right)),
+///            op: transform::transform_logical_opcode(self, i.op),
+///            right: Box::new(transform::transform_logical_expr(self, *i.left)),
+///        }
+///    }
+///}
+/// ```
+/// ### Usage of this transpiler:
+/// ```ignore
+/// let ast = Transformer.transform_command(ast);
+/// ```
+
 pub trait Transform {
     fn transform_lit_number(&mut self, i: LitNumber) -> LitNumber {
         transform_lit_number(self, i)
@@ -365,9 +398,9 @@ mod tests {
             fn transform_logical_expr_op(&mut self, i: LogicalExprOp) -> LogicalExprOp {
                 if let LogicalExprOpcode::GreaterThan = i.op {
                     return LogicalExprOp {
-                        left: Box::new(self.transform_expr(*i.right)),
-                        op: self.transform_logical_expr_opcode(LogicalExprOpcode::LessThan),
-                        right: Box::new(self.transform_expr(*i.left)),
+                        left: Box::new(transform_expr(self, *i.right)),
+                        op: transform_logical_expr_opcode(self, LogicalExprOpcode::LessThan),
+                        right: Box::new(transform_expr(self, *i.left)),
                     };
                 }
 
