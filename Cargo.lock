@@ -738,12 +738,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "paste"
-version = "1.0.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f746c4065a8fa3fe23974dd82f15431cc8d40779821001404d10d2e79ca7d79"
-
-[[package]]
 name = "pear"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1127,7 +1121,10 @@ name = "server"
 version = "0.1.0"
 dependencies = [
  "grammar",
+ "lalrpop-util",
  "rocket",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -1249,14 +1246,6 @@ dependencies = [
  "dirs-next",
  "rustversion",
  "winapi",
-]
-
-[[package]]
-name = "tester"
-version = "0.1.0"
-dependencies = [
- "grammar",
- "unsupported",
 ]
 
 [[package]]
@@ -1517,13 +1506,6 @@ name = "unicode-xid"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f962df74c8c05a667b5ee8bcf162993134c104e96440b663c8daa176dc772d8c"
-
-[[package]]
-name = "unsupported"
-version = "0.1.0"
-dependencies = [
- "paste",
-]
 
 [[package]]
 name = "valuable"

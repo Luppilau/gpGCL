@@ -3,36 +3,20 @@
  import Editor from "./Editor.svelte";
  import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
 
+ import { debounce } from "../helpers/debounce";
+ import { validate_input } from "../helpers/validate_input";
+
  let value: string = coin_example;
  let editor: Monaco.editor.IStandaloneCodeEditor | null = null;
  let model: Monaco.editor.ITextModel | null = null;
+ let monaco: typeof Monaco | null = null;
+
+ $: debouncedHandleClick(value, monaco, model);
+
+ const debouncedHandleClick = debounce(validate_input, 800);
 
  function handleSelect(target: EventTarget | null) {
   model?.setValue((target as HTMLSelectElement).value);
- }
-
- async function handleClick() {
-  console.log(value);
-
-  const res = await fetch("http://127.0.0.1:8000/handle", {
-   method: "POST",
-   body: value,
-  });
-  const text = await res.text();
-  console.log(text);
- }
-
- function setErrors() {
-  // monaco.editor.setModelMarkers(model, "owner", [
-  //  {
-  //   startLineNumber: 1,
-  //   startColumn: 1,
-  //   endLineNumber: 1,
-  //   endColumn: 1,
-  //   message: "This is an error",
-  //   severity: monaco.MarkerSeverity.Error,
-  //  },
-  // ]);
  }
 </script>
 
@@ -47,9 +31,7 @@
   <option value={bounded_retransmission}>Bounded Retransmission Protocol</option
   >
  </select>
- <Editor bind:value bind:model bind:editor />
-
- <button on:click={handleClick}> Transpile </button>
+ <Editor bind:value bind:model bind:editor bind:monaco />
 </div>
 
 <style>

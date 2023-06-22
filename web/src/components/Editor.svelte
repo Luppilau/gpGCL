@@ -7,8 +7,8 @@
  export let value: string;
  export let editor: Monaco.editor.IStandaloneCodeEditor | null = null;
  export let model: Monaco.editor.ITextModel | null = null;
+ export let monaco: typeof Monaco | null = null;
 
- let monaco: typeof Monaco;
  let editorElement: HTMLElement;
  const options: Monaco.editor.IStandaloneEditorConstructionOptions = {
   readOnly: false,

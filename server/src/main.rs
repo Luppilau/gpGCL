@@ -1,16 +1,18 @@
 #[macro_use]
 extern crate rocket;
+extern crate lalrpop_util;
 
 mod cors;
-mod validate;
+mod handler;
 
 use grammar::ast::*;
 use grammar::visit::Visit;
-use validate::*;
+use handler::{ParseError, RequestHandler};
+use serde::Serialize;
 
-pub struct RequestHandler;
-impl validate::Responder for RequestHandler {
-    fn validate(&self, _ast: &grammar::ast::Command) -> Result<(), String> {
+pub struct CustomHandler;
+impl RequestHandler for CustomHandler {
+    fn visit(&self, _ast: &grammar::ast::Command) -> Result<(), String> {
         struct SupportChecker {
             errors: Vec<String>,
         }
@@ -35,14 +37,33 @@ impl validate::Responder for RequestHandler {
     }
 }
 
-#[post("/handle", data = "<input>")]
-fn handle(input: String) -> String {
-    RequestHandler.handle(&input)
+#[derive(Serialize)]
+struct Response {
+    result: String,
+    errors: Vec<ParseError>,
+}
+
+#[post("/validate", data = "<input>")]
+fn validate(input: String) -> String {
+    let result = &CustomHandler.validate(&input);
+
+    let response = match result {
+        Ok(_) => Response {
+            result: "".to_string(),
+            errors: vec![],
+        },
+        Err(errors) => Response {
+            result: "".to_string(),
+            errors: vec![errors.clone()],
+        },
+    };
+
+    serde_json::to_string(&response).unwrap()
 }
 
 #[launch]
 fn rocket() -> _ {
     rocket::build()
         .attach(cors::CORS)
-        .mount("/", routes![handle])
+        .mount("/", routes![validate])
 }
