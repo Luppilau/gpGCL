@@ -29,6 +29,7 @@ impl RequestHandler for CustomHandler {
         }
 
         let mut checker = SupportChecker { errors: vec![] };
+
         checker.visit_command(_ast);
         if !checker.errors.is_empty() {
             return Err(checker.errors.join("\n"));
