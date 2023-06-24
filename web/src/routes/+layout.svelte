@@ -1,7 +1,16 @@
 <script>
- import { SvelteToast } from "@zerodevx/svelte-toast";
-
  import Playground from "$lib/components/Playground.svelte";
+ import { SvelteToast } from "@zerodevx/svelte-toast";
+ import { onMount } from "svelte";
+ import { configuration, language, tokenProvider } from "$lib/config/language";
+ //  import type * as MonacoTypes from "monaco-editor";
+ import * as monaco from "monaco-editor";
+
+ onMount(() => {
+  monaco.languages.register(language);
+  monaco.languages.setLanguageConfiguration("gpgcl", configuration);
+  monaco.languages.setMonarchTokensProvider("gpgcl", tokenProvider);
+ });
 </script>
 
 <main>
@@ -26,7 +35,7 @@
   height: 100%;
   width: 100%;
   display: flex;
-  gap: var(--size-5);
+  gap: var(--size-2);
   padding: var(--size-5);
  }
 
@@ -35,6 +44,7 @@
   flex-direction: column;
   gap: var(--size-5);
   max-width: 600px;
+  min-width: 400px;
   flex-grow: 1;
  }
 
@@ -43,6 +53,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--size-1);
+  padding-right: var(--size-3);
   overflow: auto;
  }
 

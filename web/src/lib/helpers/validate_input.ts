@@ -20,7 +20,7 @@ export const validate_input = async (
    return;
   }
   const response = await res.json();
-
+  console.log(response.errors);
   monaco.editor.setModelMarkers(model, "owner", response.errors);
  } catch (error) {
   toast.push("Could not connect to server", { target: "top" });

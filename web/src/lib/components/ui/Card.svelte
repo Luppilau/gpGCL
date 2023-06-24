@@ -1,4 +1,8 @@
-<div class="card">
+<script lang="ts">
+ export let minHeight = "0px";
+</script>
+
+<div class="card" style:min-height={minHeight}>
  <slot />
 </div>
 

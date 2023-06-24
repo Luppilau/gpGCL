@@ -3,12 +3,22 @@ page_title: Intro
 title: Welcome to gpGCL
 count: 25
 list: [1, 2, 3, 4, "boo"]
+editor_value: |
+
+ a := 1;
+ b := 2;
+ { b := a } [0.5] { a := b }
 ---
 
 <svelte:head>
 
   <title>{page_title}</title>
 </svelte:head>
+
+<script lang="ts">
+  import Card from "$lib/components/ui/Card.svelte"
+  import Editor from "$lib/components/Editor.svelte"
+</script>
 
 # { title }
 
@@ -31,6 +41,9 @@ I'm not gonna stand in the way of your egomania.
 > — _Me, May 2019_
 
 Yeah, thats right you can put wigdets in markdown (`.svx` files or otherwise). You can put markdown in widgets too.
+<Card minHeight="200px">
+<Editor options={{readOnly: true}} value={editor_value} />
+</Card>
 
 Sometimes you need your widgets **inlined** because why shouldn't you.
 Obviously you have access to values defined in YAML (namespaced under `metadata`) and anything defined in an fenced `js exec` block can be referenced directly.
