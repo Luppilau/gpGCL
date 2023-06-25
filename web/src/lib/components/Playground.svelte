@@ -2,46 +2,98 @@
  import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
 
  import { all_examples } from "$lib/examples/example-programs";
- import { data } from "$lib/examples/example-data";
  import { toast } from "@zerodevx/svelte-toast";
+ import { execute } from "$lib/helpers/server_functions";
 
  import Editor from "./Editor.svelte";
  import Plot from "./visualizations/Plot.svelte";
  import Select from "./ui/Select.svelte";
  import Button from "./ui/Button.svelte";
  import PlaygroundLayout from "./ui/PlaygroundLayout.svelte";
+ import SpinningLoader from "./SpinningLoader.svelte";
 
+ let valid: boolean;
  let value: string = all_examples[0].value;
+ let executionArgs: string =
+  "--post POST --prop PROP --invarianttype TYPE --templaterefiner TEMP";
  let editor: Monaco.editor.IStandaloneCodeEditor | null = null;
- let model: Monaco.editor.ITextModel | null = null;
 
  function handleSelect(target: EventTarget | null) {
-  model?.setValue((target as HTMLSelectElement).value);
+  editor?.getModel()?.setValue((target as HTMLSelectElement).value);
  }
+
+ function handleExecute() {
+  executionResponse = execute(value, executionArgs);
+ }
+
+ let executionResponse: Promise<any> | null = null;
 </script>
 
 <PlaygroundLayout>
- <span slot="controls" class="slot_wrapper">
-  <Button on:click={() => toast.push("Not implemented", { target: "top" })}>
-   Execute
-  </Button>
- </span>
-
  <span slot="source" class="slot_wrapper">
   <Select
    options={all_examples}
    on:change={(selected) => handleSelect(selected.target)}
   />
-  <Editor bind:value bind:editor enableValidation />
+  <Editor bind:value bind:editor bind:valid enableValidation />
  </span>
 
  <span slot="output" class="slot_wrapper">
-  <Plot type="bar" {data} />
+  <div>
+   <p>Execution arguments:</p>
+   <div class="output_controls">
+    <input
+     bind:value={executionArgs}
+     type="text"
+     name="output_args"
+     id="output_args"
+     class="input"
+    />
+    <Button on:click={handleExecute} disabled={!valid}>Execute</Button>
+   </div>
+  </div>
+
+  {#if executionResponse == null}
+   <div class="center_align">
+    <h3>No results yet</h3>
+
+    <p>Run the query to see results here</p>
+   </div>
+  {:else}
+   {#await executionResponse}
+    <div class="center_align">
+     <SpinningLoader />
+    </div>
+   {:then value}
+    <Plot type={value.type} data={value.data} />
+   {:catch}
+    <div class="center_align">
+     <h3>Something went wrong</h3>
+    </div>
+   {/await}
+  {/if}
  </span>
 </PlaygroundLayout>
 
 <style>
  .slot_wrapper {
   display: contents;
+ }
+
+ .center_align {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+ }
+ .output_controls {
+  display: flex;
+  gap: var(--size-3);
+ }
+
+ .input {
+  width: 100%;
  }
 </style>

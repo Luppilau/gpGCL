@@ -1,4 +1,4 @@
-export const data = {
+export const example_data = {
  labels: [1, 2, 3, 4, 5, 6],
  datasets: [
   {

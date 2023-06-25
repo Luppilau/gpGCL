@@ -1,13 +1,13 @@
 import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
 
-export const language: Monaco.languages.ILanguageExtensionPoint = {
+export const gpgclLanguage: Monaco.languages.ILanguageExtensionPoint = {
  id: "gpgcl",
  extensions: ["gpgcl"],
  aliases: [],
  mimetypes: ["application/gpgcl"],
 };
 
-export const configuration: Monaco.languages.LanguageConfiguration = {
+export const gpgclConfiguration: Monaco.languages.LanguageConfiguration = {
  brackets: [
   ["(", ")"],
   ["{", "}"],
@@ -25,7 +25,7 @@ export const configuration: Monaco.languages.LanguageConfiguration = {
  ],
 };
 
-export const tokenProvider: Monaco.languages.IMonarchLanguage = {
+export const gpgclTokenProvider: Monaco.languages.IMonarchLanguage = {
  defaultToken: "",
  tokenPostfix: ".gpgcl",
 

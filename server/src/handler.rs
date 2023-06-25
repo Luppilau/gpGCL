@@ -90,8 +90,8 @@ pub trait RequestHandler {
             Err(e) => Err(convert_to_parse_error(input, e)),
         }
     }
-    fn transform(&self, ast: Command) -> Result<Command, String> {
-        Ok(ast)
+    fn transform(&self, ast: Command) -> Command {
+        ast
     }
     fn visit(&self, _ast: &Command) -> Result<(), String> {
         Ok(())

@@ -1,16 +1,17 @@
 <script>
  import Playground from "$lib/components/Playground.svelte";
  import { SvelteToast } from "@zerodevx/svelte-toast";
- import { onMount } from "svelte";
- import { configuration, language, tokenProvider } from "$lib/config/language";
- //  import type * as MonacoTypes from "monaco-editor";
+ import {
+  gpgclConfiguration,
+  gpgclLanguage,
+  gpgclTokenProvider,
+ } from "$lib/config/language";
  import * as monaco from "monaco-editor";
 
- onMount(() => {
-  monaco.languages.register(language);
-  monaco.languages.setLanguageConfiguration("gpgcl", configuration);
-  monaco.languages.setMonarchTokensProvider("gpgcl", tokenProvider);
- });
+ // Global instatiation of Monaco editor
+ monaco.languages.register(gpgclLanguage);
+ monaco.languages.setLanguageConfiguration("gpgcl", gpgclConfiguration);
+ monaco.languages.setMonarchTokensProvider("gpgcl", gpgclTokenProvider);
 </script>
 
 <main>
@@ -34,22 +35,30 @@
   box-sizing: border-box;
   height: 100%;
   width: 100%;
-  display: flex;
+  display: grid;
+  grid-template-columns: 3fr 2fr;
   gap: var(--size-2);
   padding: var(--size-5);
+ }
+
+ @media (max-width: 1050px) {
+  main {
+   overflow: auto;
+   grid-template-columns: 1fr;
+  }
+
+  .content {
+   overflow: unset !important;
+  }
  }
 
  .playground {
   display: flex;
   flex-direction: column;
   gap: var(--size-5);
-  max-width: 600px;
-  min-width: 400px;
-  flex-grow: 1;
  }
 
  .content {
-  flex-grow: 1;
   display: flex;
   flex-direction: column;
   gap: var(--size-1);

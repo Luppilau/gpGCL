@@ -2,26 +2,16 @@
  import Card from "./Card.svelte";
 </script>
 
-<Card>
- <div class="controls">
-  <h3>Source program</h3>
-
-  <slot name="controls" />
- </div>
+<Card minHeight="350px">
+ <h3>Source program</h3>
 
  <slot name="source" />
 </Card>
 
-<Card>
+<Card minHeight="300px" style="flex-grow: 4">
  <h3>Output</h3>
  <slot name="output" />
 </Card>
 
 <style>
- .controls {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
- }
 </style>

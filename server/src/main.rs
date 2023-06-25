@@ -6,40 +6,38 @@ mod cors;
 mod handler;
 
 use grammar::ast::*;
-use grammar::visit::Visit;
 use handler::{ParseError, RequestHandler};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 pub struct CustomHandler;
 impl RequestHandler for CustomHandler {
-    fn visit(&self, _ast: &grammar::ast::Command) -> Result<(), String> {
-        struct SupportChecker {
-            errors: Vec<String>,
-        }
+    // TODO: Implement custom transpilation here
+    // fn transpile(&self, ast: Command) -> String {
+    //     struct Transpiler;
+    //     impl grammar::transpile::Transpile for Transpiler {}
 
-        impl grammar::visit::Visit for SupportChecker {
-            fn visit_diverge(&mut self, _i: &Diverge) {
-                self.errors
-                    .push("Diverge operation not supported".to_string());
-            }
+    //     Transpiler.transpile_command(ast)
+    // }
 
-            fn visit_skip(&mut self, _i: &Skip) {
-                self.errors.push("Skip operation not supported".to_string());
-            }
-        }
+    // TODO: Implement custom transformation here
+    // fn transform(&self, ast: Command) -> Command {
+    //     struct Transformer;
+    //     impl grammar::transform::Transform for Transformer {}
 
-        let mut checker = SupportChecker { errors: vec![] };
+    //     Transformer.transform_command(ast)
+    // }
 
-        checker.visit_command(_ast);
-        if !checker.errors.is_empty() {
-            return Err(checker.errors.join("\n"));
-        }
-        Ok(())
-    }
+    // TODO: Implement custom visitation here
+    // fn visit(&self, ast: &Command) -> Result<(), String> {
+    //     struct Visitor;
+    //     impl Visit for Visitor {}
+
+    //     Ok(Visitor.visit_command(ast))
+    // }
 }
 
 #[derive(Serialize)]
-struct Response {
+struct ValidationResponse {
     result: String,
     errors: Vec<ParseError>,
 }
@@ -49,11 +47,11 @@ fn validate(input: String) -> String {
     let result = &CustomHandler.validate(&input);
 
     let response = match result {
-        Ok(_) => Response {
+        Ok(_) => ValidationResponse {
             result: "".to_string(),
             errors: vec![],
         },
-        Err(errors) => Response {
+        Err(errors) => ValidationResponse {
             result: "".to_string(),
             errors: vec![errors.clone()],
         },
@@ -62,9 +60,48 @@ fn validate(input: String) -> String {
     serde_json::to_string(&response).unwrap()
 }
 
+#[derive(Deserialize, Debug)]
+struct ExecutionRequest {
+    program: String,
+    args: String,
+}
+
+#[derive(Serialize)]
+struct ExecutionResponse {
+    result: String,
+    errors: Vec<ParseError>,
+}
+
+#[post("/execute", data = "<input>")]
+fn execute(input: String) -> String {
+    let request: ExecutionRequest = serde_json::from_str(&input).unwrap();
+
+    // Parse input and return error if necessary
+    let parsed_source: Result<Command, ParseError> = CustomHandler.parse(&request.program);
+    if let Err(e) = parsed_source {
+        let response = ExecutionResponse {
+            result: "".to_string(),
+            errors: vec![e.clone()],
+        };
+
+        return serde_json::to_string(&response).unwrap();
+    }
+    // TODO: Transform only if necessary
+    let transformed_source = CustomHandler.transform(parsed_source.unwrap());
+
+    // Transpile input
+    let transpiled_source = &CustomHandler.transpile(transformed_source);
+    // TODO: Call tool with transpiled
+    //
+    //
+
+    // Respond with result
+    serde_json::to_string(&transpiled_source).unwrap()
+}
+
 #[launch]
 fn rocket() -> _ {
     rocket::build()
         .attach(cors::CORS)
-        .mount("/", routes![validate])
+        .mount("/", routes![validate, execute])
 }

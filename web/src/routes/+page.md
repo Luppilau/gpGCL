@@ -26,11 +26,9 @@ editor_value: |
 
 todo!()
 
-### Markdown Capabilities
+### Capabilities
 
-```javascript
-let x = x;
-```
+The markdown pages support a multitude of features.
 
 Sometimes what you wrote last week is so good that you just _have_ to include it again.
 
@@ -42,8 +40,13 @@ I'm not gonna stand in the way of your egomania.
 
 Yeah, thats right you can put wigdets in markdown (`.svx` files or otherwise). You can put markdown in widgets too.
 <Card minHeight="200px">
+
+#### Example editor
+
 <Editor options={{readOnly: true}} value={editor_value} />
 </Card>
+
+<a href="/about">You can even create multiple pages and link between them</a>
 
 Sometimes you need your widgets **inlined** because why shouldn't you.
 Obviously you have access to values defined in YAML (namespaced under `metadata`) and anything defined in an fenced `js exec` block can be referenced directly.
