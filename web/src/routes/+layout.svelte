@@ -115,4 +115,8 @@
    --toastWidth: 40rem;
   }
  }
+
+ :global(*) {
+  max-inline-size: unset !important;
+ }
 </style>

@@ -3,6 +3,7 @@
 use grammar::ast::*;
 use grammar::grammar::commandParser;
 use grammar::transpile::Transpile;
+
 use lalrpop_util::ParseError as LalrpopParseError;
 
 use lalrpop_util::lexer::Token;
@@ -34,6 +35,10 @@ impl ParseError {
             message,
             severity: 8,
         }
+    }
+
+    pub fn message(&self) -> &str {
+        &self.message
     }
 
     fn full_sized_error(input: &str, error: String) -> Self {

@@ -2,7 +2,6 @@
  import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
 
  import { all_examples } from "$lib/examples/example-programs";
- import { toast } from "@zerodevx/svelte-toast";
  import { execute } from "$lib/helpers/server_functions";
 
  import Editor from "./Editor.svelte";
@@ -11,15 +10,17 @@
  import Button from "./ui/Button.svelte";
  import PlaygroundLayout from "./ui/PlaygroundLayout.svelte";
  import SpinningLoader from "./SpinningLoader.svelte";
+ import TextOutput from "./ui/TextOutput.svelte";
 
  let valid: boolean;
  let value: string = all_examples[0].value;
- let executionArgs: string =
-  "--post POST --prop PROP --invarianttype TYPE --templaterefiner TEMP";
+ let executionArgs: string = all_examples[0].args;
  let editor: Monaco.editor.IStandaloneCodeEditor | null = null;
 
  function handleSelect(target: EventTarget | null) {
-  editor?.getModel()?.setValue((target as HTMLSelectElement).value);
+  let program = (target as HTMLSelectElement).value;
+  editor?.getModel()?.setValue(program);
+  executionArgs = all_examples.find((e) => e.value === program)?.args ?? "";
  }
 
  function handleExecute() {
@@ -65,7 +66,11 @@
      <SpinningLoader />
     </div>
    {:then value}
-    <Plot type={value.type} data={value.data} />
+    <TextOutput>
+     {value}
+    </TextOutput>
+
+    <!-- <Plot type={value.type} data={value.data} /> -->
    {:catch}
     <div class="center_align">
      <h3>Something went wrong</h3>

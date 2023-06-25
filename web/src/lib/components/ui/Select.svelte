@@ -6,7 +6,7 @@
 </script>
 
 <select name="selector" id="selector" on:change>
- {#each options as item, i}
+ {#each options as item}
   <option value={item.value}>{item.label}</option>
  {/each}
 </select>

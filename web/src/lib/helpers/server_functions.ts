@@ -74,12 +74,9 @@ export async function execute(
   throw response;
  }
 
- //TODO: Format response data to chartjs
+ if (response.error != null) {
+  throw new Error(response.error);
+ }
 
- let resp: ExecuteResponse = {
-  type: "line",
-  data: example_data,
- };
-
- return resp;
+ return response.result;
 }

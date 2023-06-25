@@ -1,5 +1,4 @@
-export const coin_example = `x := 0;
-while (x < 0.5) {
+export const coin_example = `while (x < 0.5) {
   x := uniform(0,1)
 }`;
 
@@ -13,9 +12,12 @@ export const all_examples = [
  {
   label: "Coin exampe",
   value: coin_example,
+  args:
+   '--invarianttype past --templaterefiner inductivity --distance 1 --initialstates "[x=0]"',
  },
  {
   label: "Bounded retransmission protocol",
   value: bounded_retransmission,
+  args: "",
  },
 ];
