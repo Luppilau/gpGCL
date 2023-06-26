@@ -12,8 +12,7 @@ export const all_examples = [
  {
   label: "Coin exampe",
   value: coin_example,
-  args:
-   '--invarianttype past --templaterefiner inductivity --distance 1 --initialstates "[x=0]"',
+  args: "",
  },
  {
   label: "Bounded retransmission protocol",
