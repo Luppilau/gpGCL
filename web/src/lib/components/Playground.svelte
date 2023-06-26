@@ -11,6 +11,7 @@
  import PlaygroundLayout from "./ui/PlaygroundLayout.svelte";
  import SpinningLoader from "./SpinningLoader.svelte";
  import TextOutput from "./ui/TextOutput.svelte";
+ import TextField from "./ui/TextField.svelte";
 
  let valid: boolean;
  let value: string = all_examples[0].value;
@@ -39,18 +40,17 @@
   <Editor bind:value bind:editor bind:valid enableValidation />
  </span>
 
+ <span slot="title">
+  <Button on:click={handleExecute} disabled={!valid}>Execute</Button>
+ </span>
+
  <span slot="output" class="slot_wrapper">
   <div>
    <p>Execution arguments:</p>
    <div class="output_controls">
-    <input
-     bind:value={executionArgs}
-     type="text"
-     name="output_args"
-     id="output_args"
-     class="input"
-    />
-    <Button on:click={handleExecute} disabled={!valid}>Execute</Button>
+    <Select options={[{ label: "Additional arguments", value: "" }]} />
+    <Select options={[{ label: "Additional arguments", value: "" }]} />
+    <TextField bind:value={executionArgs} placeholder="Execution args" />
    </div>
   </div>
 
@@ -69,7 +69,6 @@
     <TextOutput>
      {value}
     </TextOutput>
-
     <!-- <Plot type={value.type} data={value.data} /> -->
    {:catch error}
     <div class="center_align">
