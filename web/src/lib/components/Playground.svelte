@@ -9,6 +9,7 @@
  import Select from "./ui/Select.svelte";
  import Button from "./ui/Button.svelte";
  import PlaygroundLayout from "./ui/PlaygroundLayout.svelte";
+ import TextField from "./ui/TextField.svelte";
  import SpinningLoader from "./ui/SpinningLoader.svelte";
 
  import Plot from "./visualizations/Plot.svelte";
@@ -41,19 +42,17 @@
   <Editor bind:value bind:editor bind:valid enableValidation />
  </span>
 
- <!-- Visualization section -->
+ <span slot="title">
+  <Button on:click={handleExecute} disabled={!valid}>Execute</Button>
+ </span>
+
  <span slot="output" class="slot_wrapper">
   <div>
    <p>Execution arguments:</p>
    <div class="output_controls">
-    <input
-     bind:value={executionArgs}
-     type="text"
-     name="output_args"
-     id="output_args"
-     class="input"
-    />
-    <Button on:click={handleExecute} disabled={!valid}>Execute</Button>
+    <Select options={[{ label: "Additional arguments", value: "" }]} />
+    <Select options={[{ label: "Additional arguments", value: "" }]} />
+    <TextField bind:value={executionArgs} placeholder="Execution args" />
    </div>
   </div>
 
@@ -105,9 +104,5 @@
  .output_controls {
   display: flex;
   gap: var(--size-3);
- }
-
- .input {
-  width: 100%;
  }
 </style>

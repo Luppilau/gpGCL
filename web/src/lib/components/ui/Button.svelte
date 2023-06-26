@@ -2,7 +2,7 @@
  export let disabled = false;
 </script>
 
-<button on:click {disabled}>
+<button on:click {disabled} {...$$restProps}>
  <slot />
 </button>
 
