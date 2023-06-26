@@ -71,10 +71,13 @@
     </TextOutput>
 
     <!-- <Plot type={value.type} data={value.data} /> -->
-   {:catch}
+   {:catch error}
     <div class="center_align">
      <h3>Something went wrong</h3>
     </div>
+    <TextOutput>
+     {error}
+    </TextOutput>
    {/await}
   {/if}
  </span>

@@ -65,18 +65,20 @@ export async function execute(
   args: executionArgs,
  };
 
- const response = await try_fetch(
-  "http://127.0.0.1:8000/execute",
-  JSON.stringify(payload)
- );
+ return new Promise(async (resolve, reject) => {
+  const response = await try_fetch(
+   "http://127.0.0.1:8000/execute",
+   JSON.stringify(payload)
+  );
 
- if (response instanceof Error) {
-  throw response;
- }
+  if (response instanceof Error) {
+   reject(response);
+  }
 
- if (response.error != null) {
-  throw new Error(response.error);
- }
+  if (response.errors.length > 0 && response.errors[0] !== "") {
+   reject(response.errors);
+  }
 
- return response.result;
+  resolve(response.result);
+ });
 }
