@@ -14,10 +14,11 @@
  import Plot from "./visualizations/Plot.svelte";
  import TextOutput from "./visualizations/TextOutput.svelte";
 
- let valid: boolean;
- let value: string = all_examples[0].value;
- let executionArgs: string = all_examples[0].args;
- let editor: Monaco.editor.IStandaloneCodeEditor | null = null;
+ let valid: boolean; // Has the entered program been validated on the server?
+ let value: string = all_examples[0].value; // The value of the editor
+ let executionArgs: string = all_examples[0].args; // Extra arguments for execution of the tool
+ let executionResponse: Promise<any> | null = null; // The response from the server
+ let editor: Monaco.editor.IStandaloneCodeEditor | null = null; // The editor instance
 
  function handleSelect(target: EventTarget | null) {
   let program = (target as HTMLSelectElement).value;
@@ -28,11 +29,10 @@
  function handleExecute() {
   executionResponse = execute(value, executionArgs);
  }
-
- let executionResponse: Promise<any> | null = null;
 </script>
 
 <PlaygroundLayout>
+ <!-- Editor section -->
  <span slot="source" class="slot_wrapper">
   <Select
    options={all_examples}
@@ -41,6 +41,7 @@
   <Editor bind:value bind:editor bind:valid enableValidation />
  </span>
 
+ <!-- Visualization section -->
  <span slot="output" class="slot_wrapper">
   <div>
    <p>Execution arguments:</p>
@@ -56,6 +57,7 @@
    </div>
   </div>
 
+  <!--  Visuzalisation results -->
   {#if executionResponse == null}
    <div class="center_align">
     <h3>No results yet</h3>
@@ -64,14 +66,18 @@
    </div>
   {:else}
    {#await executionResponse}
+    <!-- While execution is running, a loader is shown -->
     <div class="center_align">
      <SpinningLoader />
     </div>
    {:then value}
+    <!-- If successful execution data can be visualized -->
+
     <TextOutput>{value}</TextOutput>
     <!-- <Plot type="bar" data={example_data} /> -->
     <!-- <Plot type="line" data={example_data} /> -->
    {:catch error}
+    <!-- If execution fails, an error message is shown together with the error message -->
     <div class="center_align">
      <h3>Something went wrong</h3>
     </div>
