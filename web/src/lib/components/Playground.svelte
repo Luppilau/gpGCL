@@ -3,14 +3,16 @@
 
  import { all_examples } from "$lib/examples/example-programs";
  import { execute } from "$lib/helpers/server_functions";
+ import { example_data } from "$lib/examples/example-data";
 
  import Editor from "./Editor.svelte";
- import Plot from "./visualizations/Plot.svelte";
  import Select from "./ui/Select.svelte";
  import Button from "./ui/Button.svelte";
  import PlaygroundLayout from "./ui/PlaygroundLayout.svelte";
- import SpinningLoader from "./SpinningLoader.svelte";
- import TextOutput from "./ui/TextOutput.svelte";
+ import SpinningLoader from "./ui/SpinningLoader.svelte";
+
+ import Plot from "./visualizations/Plot.svelte";
+ import TextOutput from "./visualizations/TextOutput.svelte";
 
  let valid: boolean;
  let value: string = all_examples[0].value;
@@ -66,11 +68,9 @@
      <SpinningLoader />
     </div>
    {:then value}
-    <TextOutput>
-     {value}
-    </TextOutput>
-
-    <!-- <Plot type={value.type} data={value.data} /> -->
+    <TextOutput>{value}</TextOutput>
+    <!-- <Plot type="bar" data={example_data} /> -->
+    <!-- <Plot type="line" data={example_data} /> -->
    {:catch error}
     <div class="center_align">
      <h3>Something went wrong</h3>
