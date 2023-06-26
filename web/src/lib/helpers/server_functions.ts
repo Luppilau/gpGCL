@@ -1,7 +1,9 @@
 import { toast } from "@zerodevx/svelte-toast";
 import { example_data } from "$lib/examples/example-data";
-
 import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
+import type { ChartType } from "chart.js";
+
+const SERVER_URL = "http://localhost:8000/";
 
 async function try_fetch(url: string, body: string) {
  try {
@@ -31,22 +33,14 @@ export async function validate_input(
   return false;
  }
 
- const response = await try_fetch("http://127.0.0.1:8000/validate", value);
+ const response = await try_fetch(SERVER_URL + "/validate", value);
  monaco.editor.setModelMarkers(model, "owner", response.errors);
 
  return response.errors.length === 0;
 }
 
 interface ExecuteResponse {
- type:
-  | "line"
-  | "bar"
-  | "pie"
-  | "doughnut"
-  | "radar"
-  | "polarArea"
-  | "bubble"
-  | "scatter";
+ type: ChartType;
  data: {
   labels: string[] | number[];
   datasets: {
@@ -67,7 +61,7 @@ export async function execute(
 
  return new Promise(async (resolve, reject) => {
   const response = await try_fetch(
-   "http://127.0.0.1:8000/execute",
+   SERVER_URL + "/execute",
    JSON.stringify(payload)
   );
 

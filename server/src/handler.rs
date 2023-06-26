@@ -9,6 +9,47 @@ use lalrpop_util::ParseError as LalrpopParseError;
 use lalrpop_util::lexer::Token;
 use serde::Serialize;
 
+pub struct CustomHandler;
+
+pub trait RequestHandler {
+    fn transform(&self, ast: Command) -> Command {
+        ast
+    }
+    fn validate(&self, _ast: &Command) -> Result<(), String> {
+        Ok(())
+    }
+    fn transpile(&self, ast: Command) -> String {
+        struct Transpiler;
+        impl grammar::transpile::Transpile for Transpiler {}
+
+        Transpiler.transpile_command(ast)
+    }
+}
+
+pub trait Handler: RequestHandler {
+    fn parse_input(&self, input: &str) -> Result<Command, ParseError> {
+        let parser = commandParser::new();
+        let parsed = parser.parse(input);
+
+        match parsed {
+            Ok(ast) => Ok(*ast),
+            Err(e) => Err(convert_to_parse_error(input, e)),
+        }
+    }
+
+    fn validate_input(&self, input: &str) -> Result<(), ParseError> {
+        let parsed = self.parse_input(input)?;
+
+        let validated = self.validate(&parsed);
+        if let Err(e) = validated {
+            return Err(ParseError::full_sized_error(input, e));
+        }
+
+        Ok(())
+    }
+}
+impl Handler for CustomHandler {}
+
 #[derive(Debug, Serialize, Clone)]
 pub struct ParseError {
     startLineNumber: usize,
@@ -82,48 +123,6 @@ fn index_to_line_column(string: &str, index: usize) -> Option<(usize, usize)> {
         Some((line, column))
     } else {
         None
-    }
-}
-
-pub trait RequestHandler {
-    fn parse(&self, input: &str) -> Result<Command, ParseError> {
-        let parser = commandParser::new();
-        let parsed = parser.parse(input);
-
-        match parsed {
-            Ok(ast) => Ok(*ast),
-            Err(e) => Err(convert_to_parse_error(input, e)),
-        }
-    }
-    fn transform(&self, ast: Command) -> Command {
-        ast
-    }
-    fn visit(&self, _ast: &Command) -> Result<(), String> {
-        Ok(())
-    }
-    fn transpile(&self, ast: Command) -> String {
-        struct Transpiler;
-        impl grammar::transpile::Transpile for Transpiler {}
-
-        Transpiler.transpile_command(ast)
-    }
-    fn handle(&self, _input: &str) -> Result<(), ParseError> {
-        Ok(())
-    }
-
-    fn validate(&self, input: &str) -> Result<(), ParseError> {
-        let parsed = self.parse(input);
-        if let Err(e) = parsed {
-            return Err(e);
-        }
-
-        let ast = parsed.unwrap();
-        let validated = self.visit(&ast);
-        if let Err(e) = validated {
-            return Err(ParseError::full_sized_error(input, e));
-        }
-
-        Ok(())
     }
 }
 

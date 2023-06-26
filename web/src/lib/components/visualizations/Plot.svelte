@@ -3,7 +3,7 @@
  import type * as ChartT from "chart.js/auto";
  import { onMount } from "svelte";
 
- export let type: "line" | "bar";
+ export let type: ChartT.ChartType;
  export let data: ChartT.ChartData;
  export let options: ChartT.ChartOptions = {};
 

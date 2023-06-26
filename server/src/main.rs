@@ -9,10 +9,9 @@ use grammar::ast::*;
 use grammar::transform::Transform;
 use grammar::transpile::Transpile;
 use grammar::visit::Visit;
-use handler::{ParseError, RequestHandler};
+use handler::{CustomHandler, Handler, ParseError, RequestHandler};
 use serde::{Deserialize, Serialize};
 
-pub struct CustomHandler;
 impl RequestHandler for CustomHandler {
     // TODO: Implement custom transpilation here
     // fn transpile(&self, ast: Command) -> String {
@@ -31,7 +30,7 @@ impl RequestHandler for CustomHandler {
     // }
 
     // TODO: Implement custom visitation here
-    // fn visit(&self, ast: &Command) -> Result<(), String> {
+    // fn validate(&self, ast: &Command) -> Result<(), String> {
     //     struct Visitor;
     //     impl grammar::visit::Visit for Visitor {}
     //     Visitor.visit_command(ast);
@@ -41,21 +40,16 @@ impl RequestHandler for CustomHandler {
 
 #[derive(Serialize)]
 struct ValidationResponse {
-    result: String,
     errors: Vec<ParseError>,
 }
 
 #[post("/validate", data = "<input>")]
 fn validate(input: String) -> String {
-    let result = &CustomHandler.validate(&input);
+    let result = &CustomHandler.validate_input(&input);
 
     let response = match result {
-        Ok(_) => ValidationResponse {
-            result: "".to_string(),
-            errors: vec![],
-        },
+        Ok(_) => ValidationResponse { errors: vec![] },
         Err(errors) => ValidationResponse {
-            result: "".to_string(),
             errors: vec![errors.clone()],
         },
     };
@@ -80,7 +74,7 @@ fn execute(input: String) -> String {
     let request: ExecutionRequest = serde_json::from_str(&input).unwrap();
 
     // Parse input and return error if necessary
-    let parsed_source: Result<Command, ParseError> = CustomHandler.parse(&request.program);
+    let parsed_source: Result<Command, ParseError> = CustomHandler.parse_input(&request.program);
     if let Err(e) = parsed_source {
         let response = ExecutionResponse {
             result: "".to_string(),
@@ -89,13 +83,14 @@ fn execute(input: String) -> String {
 
         return serde_json::to_string(&response).unwrap();
     }
-    // TODO: Transform only if necessary
+
+    // Transform input using CustomHandler
     let transformed_source = CustomHandler.transform(parsed_source.unwrap());
 
-    // Transpile input
+    // Transpile input using CustomHandler
     let transpiled_source = &CustomHandler.transpile(transformed_source);
 
-    // TODO: Call tool with transpiled
+    // TODO: Implement custom visitation or executions
 
     let response = ExecutionResponse {
         result: transpiled_source.to_string(),
