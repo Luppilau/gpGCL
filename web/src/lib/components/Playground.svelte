@@ -50,9 +50,13 @@
   <div>
    <p>Execution arguments:</p>
    <div class="output_controls">
-    <Select options={[{ label: "Additional arguments", value: "" }]} />
-    <Select options={[{ label: "Additional arguments", value: "" }]} />
-    <TextField bind:value={executionArgs} placeholder="Execution args" />
+    <!-- <Select options={[{ label: "Additional arguments", value: "" }]} /> -->
+    <!-- <Select options={[{ label: "Additional arguments", value: "" }]} /> -->
+    <TextField
+     bind:value={executionArgs}
+     placeholder="Execution args"
+     style="width: 100%"
+    />
    </div>
   </div>
 
