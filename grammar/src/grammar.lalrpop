@@ -68,11 +68,11 @@ logical_op: LogicalOpcode = {
 
 logical_expr_op: LogicalExprOpcode = {
   "==" => LogicalExprOpcode::Equal,
-  "!=" => LogicalExprOpcode::Equal,
+  "!=" => LogicalExprOpcode::NotEqual,
   "<" => LogicalExprOpcode::LessThan,
-  "<=" => LogicalExprOpcode::LessThan,
+  "<=" => LogicalExprOpcode::LessThanOrEq,
   ">" => LogicalExprOpcode::GreaterThan,
-  ">=" => LogicalExprOpcode::GreaterThan,
+  ">=" => LogicalExprOpcode::GreaterThanOrEq,
 };
 
 // ----- COMMANDS -----
