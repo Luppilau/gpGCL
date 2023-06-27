@@ -5,7 +5,11 @@ extern crate lalrpop_util;
 mod cors;
 mod handler;
 
-use std::{fs::File, io::Write, process::Command as CommandProcess};
+use rocket::tokio::time::timeout;
+use std::time::Duration;
+use std::{fs::File, io::Write};
+
+use async_process::Command as CommandProcess;
 
 use grammar::ast::*;
 use grammar::transform::{self, Transform};
@@ -156,7 +160,7 @@ struct ExecutionResponse {
 }
 
 #[post("/execute", data = "<input>")]
-fn execute(input: String) -> String {
+async fn execute(input: String) -> String {
     let request: ExecutionRequest = serde_json::from_str(&input).unwrap();
 
     // Parse input and return error if necessary
@@ -199,8 +203,6 @@ fn execute(input: String) -> String {
     let mut file = File::create("temp.imp.pgcl").unwrap();
     file.write_all(transpiled_source.as_bytes()).unwrap();
 
-    println!("Transpiled source: {}", transpiled_source);
-
     let mut process = CommandProcess::new("sh");
     process.current_dir("cegispro2");
     process.arg("-c").arg(format!(
@@ -208,7 +210,23 @@ fn execute(input: String) -> String {
         request.args
     ));
 
-    let output = process.output().unwrap();
+    let timeout_duration = Duration::from_secs(5);
+
+    let output = timeout(timeout_duration, process.output()).await;
+
+    let output = match output {
+        Ok(output) => output.unwrap(),
+        Err(_) => {
+            let response = ExecutionResponse {
+                result: "".to_string(),
+                errors: vec!["Execution timed out".to_string()],
+            };
+
+            return serde_json::to_string(&response).unwrap();
+        }
+    };
+
+    // let output = process.output().await;
 
     let stderr = std::str::from_utf8(&output.stderr).unwrap().to_string();
 
