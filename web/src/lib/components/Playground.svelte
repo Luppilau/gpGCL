@@ -81,7 +81,7 @@
     <!-- <Plot type="line" data={example_data} /> -->
    {:catch error}
     <!-- If execution fails, an error message is shown together with the error message -->
-    <div class="center_align">
+    <div class="center_align" style="flex-shrink: 3">
      <h3>Something went wrong</h3>
     </div>
     <TextOutput>

@@ -1,8 +1,23 @@
-const coin_example = `while (x < 0.5) {
-  x := uniform(0,1)
-}`;
+export const all_examples = [
+ {
+  label: "TACAS23: geo",
+  value: `while(c <= 0){
+  {c := 1}[0.5]{x := x + 1}
+}`,
+  args: '--post "x" --prop "[c<=0 & x<=0]*(1)"',
+ },
 
-const equal_prob_grid_family = `while(a<=N && b<=N && goal==0){
+ {
+  label: "TACAS23: k_geo",
+  value: `while(k<=N){
+  {k := k + 1; y := y + x; x := 0}[0.5]{x := x + 1}
+}`,
+  args: '--post "y" --prop "[k<=0 & x<=0 & y<=0]*(N+1)"',
+ },
+
+ {
+  label: "TACAS23: equal_prob_grid_family (TO)",
+  value: `while(a<=N && b<=N && goal==0){
   if(b == N){
       {goal := 1}[0.5]{goal := 2}
   }else{
@@ -12,41 +27,56 @@ const equal_prob_grid_family = `while(a<=N && b<=N && goal==0){
           {a := a + 1}[0.5]{b := b + 1}
       }
   }
-}`;
+}`,
+  args:
+   '--post "[goal=1] + [not (goal=1)]*0" --prop "[a<=0 & b<=0 & goal <=0 ]*0.6"',
+ },
 
-const cowboy_duel = `while(0 < flag){
+ {
+  label: "TACAS23_ABYSNTH: rfind_mc",
+  value: `while(i < k && 0 < flag){
+  {flag := 0}[0.5]{flag := 1};
+  i := i + 1
+}`,
+  args:
+   '--invarianttype past --templaterefiner inductivity --distance 1 --initialstates "[i<k & 0 < flag]"',
+ },
+
+ {
+  label: "TACAS23_ABSYNTH: cowboy_duel",
+  value: `while(0 < flag){
   {flag:=0}[0.75]{
-     {flag:=0}[0.33]{flag:=1}
+      {flag:=0}[0.33]{flag:=1}
   }
-}`;
-
-const sum_01 = `while(0 < n){
-  {x:=x+n}[0.5]{skip};
-  n := n - 1
-}`;
-
-export const all_examples = [
- {
-  label: "Coin exampe",
-  value: coin_example,
-  args:
-   '--invarianttype past --templaterefiner inductivity --distance 1 --initialstates "[x=0]"',
- },
- {
-  label: "TACAS23: Equal probability grid family",
-  value: equal_prob_grid_family,
-  args:
-   '--post "[goal=1] + [not (goal=1)]*0" --prop "[a<=0 & b<=0 & goal <=0 ]*0.6" --fastparse',
- },
- {
-  label: "TACAS23_ABSYNTH: Cowboy duel",
-  value: cowboy_duel,
+}`,
   args:
    '--invarianttype past --templaterefiner inductivity --distance 1 --initialstates "[0<flag]"',
  },
+
  {
-  label: "TACAS23_EXIST: Sum 01",
-  value: sum_01,
-  args: '--post "x" --prop "[0<n]*(x+0.5*n*0.5)+[not (0<n)]*x"',
+  label: "TACAS23_ABSYNTH: filling_vol",
+  value: `while(x == 0){
+    {x := 0}[0.5]
+    {
+      {x := 1}[0.5]{x := 2}
+    }
+  }`,
+  args: '--post "[x=2] + [not (x=2)]*0" --prop "[x=2]"',
+ },
+
+ {
+  label: "TACAS23_EXIST: Bin01_0 (TO)",
+  value: `while(0 < n){
+  {x := x + y}[0.5]{skip};
+  n := n - 1
+}`,
+  args: '--post "x" --prop "x"',
+ },
+ {
+  label: "TACAS23_EXIST: Geo11_0 (ERR)",
+  value: `while(flip == 0){
+  {flip := 1}[0.5]{x := 2 * x; z := z + 1}
+}`,
+  args: '--post "z" --prop "z"',
  },
 ];

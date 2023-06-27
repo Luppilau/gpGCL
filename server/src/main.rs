@@ -5,6 +5,7 @@ extern crate lalrpop_util;
 mod cors;
 mod handler;
 
+use grammar::visit::Visit;
 use rocket::tokio::time::timeout;
 use std::time::Duration;
 use std::{fs::File, io::Write};
@@ -13,7 +14,7 @@ use async_process::Command as CommandProcess;
 
 use grammar::ast::*;
 use grammar::transform::{self, Transform};
-use grammar::transpile::Transpile;
+use grammar::transpile::{self, Transpile};
 use handler::{CustomHandler, Handler, ParseError, RequestHandler};
 use serde::{Deserialize, Serialize};
 
@@ -45,6 +46,18 @@ impl RequestHandler for CustomHandler {
                     grammar::transpile::transpile_lit_number(self, i.max)
                 )
             }
+
+            fn transpile_logical_expr(&mut self, i: LogicalExpr) -> String {
+                match i {
+                    LogicalExpr::Not(x) => {
+                        format!(
+                            "not ({})",
+                            grammar::transpile::transpile_logical_expr(self, *x.expr)
+                        )
+                    }
+                    _ => transpile::transpile_logical_expr(self, i),
+                }
+            }
         }
 
         Transpiler.transpile_command(ast)
@@ -57,24 +70,34 @@ impl RequestHandler for CustomHandler {
             fn transform_logical_expr_op(&mut self, i: LogicalExprOp) -> LogicalExprOp {
                 match i.op {
                     LogicalExprOpcode::GreaterThan => LogicalExprOp {
-                        op: transform::transform_logical_expr_opcode(
-                            self,
-                            LogicalExprOpcode::LessThan,
-                        ),
-                        left: Box::new(transform::transform_expr(self, *i.right)),
-                        right: Box::new(transform::transform_expr(self, *i.left)),
+                        op: self.transform_logical_expr_opcode(LogicalExprOpcode::LessThan),
+                        left: Box::new(self.transform_expr(*i.right)),
+                        right: Box::new(self.transform_expr(*i.left)),
                     },
                     LogicalExprOpcode::GreaterThanOrEq => LogicalExprOp {
-                        op: transform::transform_logical_expr_opcode(
-                            self,
-                            LogicalExprOpcode::LessThanOrEq,
-                        ),
-                        left: Box::new(transform::transform_expr(self, *i.right)),
-                        right: Box::new(transform::transform_expr(self, *i.left)),
+                        op: self.transform_logical_expr_opcode(LogicalExprOpcode::LessThanOrEq),
+                        left: Box::new(self.transform_expr(*i.right)),
+                        right: Box::new(self.transform_expr(*i.left)),
                     },
 
                     _ => transform::transform_logical_expr_op(self, i),
                 }
+            }
+
+            fn transform_logical_expr(&mut self, i: LogicalExpr) -> LogicalExpr {
+                if let LogicalExpr::LogicalExprOp(lexpr) = i.clone() {
+                    if let LogicalExprOpcode::NotEqual = lexpr.op {
+                        return LogicalExpr::Not(Not {
+                            expr: Box::new(LogicalExpr::LogicalExprOp(LogicalExprOp {
+                                op: LogicalExprOpcode::Equal,
+                                left: Box::new(self.transform_expr(*lexpr.left)),
+                                right: Box::new(self.transform_expr(*lexpr.right)),
+                            })),
+                        });
+                    }
+                }
+
+                transform::transform_logical_expr(self, i)
             }
         }
 
@@ -95,24 +118,16 @@ impl RequestHandler for CustomHandler {
                 self.errors
                     .push("Nondeterministic choice not supported".to_string());
             }
-            fn visit_logical_expr_opcode(&mut self, i: &LogicalExprOpcode) {
-                match i {
-                    LogicalExprOpcode::NotEqual => self
-                        .errors
-                        .push("Not equal operator not supported".to_string()),
-                    _ => (),
-                }
-            }
-            fn visit_prob_dist_normal(&mut self, i: &ProbDistNormal) {
+            fn visit_prob_dist_normal(&mut self, _i: &ProbDistNormal) {
                 self.errors
                     .push("Normal distribution not supported".to_string());
             }
 
-            fn visit_prob_dist_log_normal(&mut self, i: &ProbDistLogNormal) {
+            fn visit_prob_dist_log_normal(&mut self, _i: &ProbDistLogNormal) {
                 self.errors
                     .push("Lognormal distribution not supported".to_string());
             }
-            fn visit_prob_dist_exponential(&mut self, i: &ProbDistExponential) {
+            fn visit_prob_dist_exponential(&mut self, _i: &ProbDistExponential) {
                 self.errors
                     .push("Exponential distribution not supported".to_string());
             }
@@ -177,17 +192,16 @@ async fn execute(input: String) -> String {
     // Transform input using CustomHandler
     let transformed_source = CustomHandler.transform(parsed_source.unwrap());
 
-    let mut assignment_checker = AssignmentVisitor {
+    let mut assignment_checker = VariableVisitor {
         variable_declarations: vec![],
-        errors: vec![],
     };
 
-    grammar::visit::visit_command(&mut assignment_checker, &transformed_source);
+    assignment_checker.visit_command(&transformed_source);
 
     // Transpile input
     let transpiled_source = &CustomHandler.transpile(transformed_source);
 
-    let transpiled_source = format!(
+    let prepended_source = format!(
         "{}{}",
         assignment_checker
             .variable_declarations
@@ -198,10 +212,13 @@ async fn execute(input: String) -> String {
         transpiled_source
     );
 
+    println!("input: {}", request.program);
+    println!("transpiled_source: {}", prepended_source);
+
     // TODO: Call tool with transpiled
 
     let mut file = File::create("temp.imp.pgcl").unwrap();
-    file.write_all(transpiled_source.as_bytes()).unwrap();
+    file.write_all(prepended_source.as_bytes()).unwrap();
 
     let mut process = CommandProcess::new("sh");
     process.current_dir("cegispro2");
@@ -210,7 +227,7 @@ async fn execute(input: String) -> String {
         request.args
     ));
 
-    let timeout_duration = Duration::from_secs(5);
+    let timeout_duration = Duration::from_secs(30);
 
     let output = timeout(timeout_duration, process.output()).await;
 
@@ -249,21 +266,14 @@ fn rocket() -> _ {
         .mount("/", routes![validate, execute])
 }
 
-struct AssignmentVisitor {
+struct VariableVisitor {
     variable_declarations: Vec<String>,
-    errors: Vec<String>,
 }
 
-impl grammar::visit::Visit for AssignmentVisitor {
-    fn visit_assignment(&mut self, i: &Assignment) {
-        if !self.variable_declarations.contains(&i.name.name) {
-            self.variable_declarations.push(i.name.name.clone())
-        }
-    }
-
-    fn visit_random_assignment(&mut self, i: &RandomAssignment) {
-        if !self.variable_declarations.contains(&i.name.name) {
-            self.variable_declarations.push(i.name.name.clone())
+impl grammar::visit::Visit for VariableVisitor {
+    fn visit_lit_variable(&mut self, i: &LitVariable) {
+        if !self.variable_declarations.contains(&i.name) {
+            self.variable_declarations.push(i.name.clone())
         }
     }
 }
