@@ -17,7 +17,7 @@ editor_value: |
 
 <script lang="ts">
   import Card from "$lib/components/ui/Card.svelte"
-  import Editor from "$lib/components/Editor.svelte"
+  import Editor from "$lib/components/ui/Editor.svelte"
 </script>
 
 # { title }

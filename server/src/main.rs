@@ -69,6 +69,21 @@ struct ExecutionResponse {
     errors: Vec<String>,
 }
 
+//      Example chart data response:
+//      Replace the ExecutionResponse.result field with this struct:
+
+// #[derive(Serialize)]
+// struct ChartData {
+//     labels: Vec<String>,
+//     datasets: Vec<ChartDataset>,
+// }
+
+// #[derive(Serialize)]
+// struct ChartDataset {
+//     label: String,
+//     data: Vec<f64>,
+// }
+
 #[post("/execute", data = "<input>")]
 fn execute(input: String) -> String {
     let request: ExecutionRequest = serde_json::from_str(&input).unwrap();

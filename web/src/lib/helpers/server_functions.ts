@@ -1,5 +1,4 @@
 import { toast } from "@zerodevx/svelte-toast";
-import { example_data } from "$lib/examples/example-data";
 import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
 import type { ChartType } from "chart.js";
 
@@ -50,13 +49,14 @@ interface ExecuteResponse {
  };
 }
 
+// TODO: Add extra parameters if needed
 export async function execute(
  value: string,
- executionArgs: string = ""
+ args: { executionArgs: string }
 ): Promise<ExecuteResponse> {
  let payload = {
   program: value,
-  args: executionArgs,
+  args: args.executionArgs,
  };
 
  return new Promise(async (resolve, reject) => {
