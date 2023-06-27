@@ -5,7 +5,7 @@
  import { execute } from "$lib/helpers/server_functions";
  import { example_data } from "$lib/examples/example-data";
 
- import Editor from "./Editor.svelte";
+ import Editor from "./ui/Editor.svelte";
  import Select from "./ui/Select.svelte";
  import Button from "./ui/Button.svelte";
  import PlaygroundLayout from "./ui/PlaygroundLayout.svelte";
@@ -21,7 +21,7 @@
  let executionResponse: Promise<any> | null = null; // The response from the server
  let editor: Monaco.editor.IStandaloneCodeEditor | null = null; // The editor instance
 
- function handleSelect(target: EventTarget | null) {
+ function handleSelectExample(target: EventTarget | null) {
   let program = (target as HTMLSelectElement).value;
   editor?.getModel()?.setValue(program);
   executionArgs = all_examples.find((e) => e.value === program)?.args ?? "";
@@ -37,7 +37,7 @@
  <span slot="source" class="slot_wrapper">
   <Select
    options={all_examples}
-   on:change={(selected) => handleSelect(selected.target)}
+   on:change={(selected) => handleSelectExample(selected.target)}
   />
   <Editor bind:value bind:editor bind:valid enableValidation />
  </span>
